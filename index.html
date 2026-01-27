@@ -391,15 +391,16 @@
     </div>
 
     <script>
-        // ======================
-        // Estado
-        // ======================
+        /* ======================================================
+           ESTADO
+        ====================================================== */
         let editId = null;
         let cache = [];
 
-        // ======================
-        // 🔥 FORMATO NUMÉRICO MILES (NUEVO)
-        // ======================
+
+        /* ======================================================
+           NUMÉRICOS (miles)
+        ====================================================== */
         function formatearMiles(valor) {
             if (!valor) return "";
             const num = String(valor).replace(/\D/g, "");
@@ -411,50 +412,28 @@
         }
 
         function activarInputNumerico(input) {
-            if (!input) return;
-
             input.type = "text";
-
             input.addEventListener("input", e => {
-                const limpio = e.target.value.replace(/\D/g, "");
-                e.target.value = formatearMiles(limpio);
-            });
-
-            input.addEventListener("keypress", e => {
-                if (!/[0-9]/.test(e.key)) e.preventDefault();
+                e.target.value = formatearMiles(e.target.value);
             });
         }
 
-        // activar base
         setTimeout(() => {
             activarInputNumerico(precioUnidad);
             activarInputNumerico(precioBulto);
             activarInputNumerico(bultoCant);
         }, 0);
 
-        // activar dropdowns dinámicos
-        document.addEventListener("input", e => {
-            if (
-                e.target.classList.contains("oPU") ||
-                e.target.classList.contains("oPB") ||
-                e.target.classList.contains("oBC")
-            ) {
-                const limpio = e.target.value.replace(/\D/g, "");
-                e.target.value = formatearMiles(limpio);
-            }
-        });
 
-        // ======================
-        // Helpers
-        // ======================
+        /* ======================================================
+           HELPERS
+        ====================================================== */
         function slugify(str) {
             return (str || "")
                 .toLowerCase()
-                .trim()
                 .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 .replace(/[^a-z0-9\s-]/g, "")
-                .replace(/\s+/g, "-")
-                .replace(/-+/g, "-");
+                .replace(/\s+/g, "-");
         }
 
         function toggleDrops() {
@@ -462,75 +441,63 @@
             drop2Box.classList.toggle("hidden", !hasDrop2.checked);
         }
 
-        // ======================
-        // Templates opciones
-        // ======================
+
+        /* ======================================================
+           OPCIONES DROPDOWN
+        ====================================================== */
         function optTemplateDrop1() {
             return `
-        <div class="opt">
-          <input class="oLabel" placeholder="Opción (20x30 / Rojo / A4)">
-          <input class="oImg" placeholder="URL Imagen (opcional)">
-          <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
-        </div>
-
-        <div class="optPrices">
-          <input class="oPU" type="text" placeholder="Precio Unidad (opcional)">
-          <input class="oPB" type="text" placeholder="Precio Bulto (opcional)">
-          <input class="oBC" type="text" placeholder="Bulto Cant (opcional)">
-        </div>
-      `;
+<div class="opt">
+<input class="oLabel" placeholder="Opción">
+<input class="oImg" placeholder="URL imagen">
+<button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+</div>
+<div class="optPrices">
+<input class="oPU" placeholder="Precio Unidad">
+<input class="oPB" placeholder="Precio Bulto">
+<input class="oBC" placeholder="Bulto Cant">
+</div>`;
         }
 
         function optTemplateDrop2() {
             return `
-        <div class="opt">
-          <input class="oLabel" placeholder="Opción (Unidad (1) / Bulto (12))">
-          <input class="oMeta" placeholder="Meta (opcional, ej: unidad|bulto)">
-          <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
-        </div>
-      `;
+<div class="opt">
+<input class="oLabel" placeholder="Opción">
+<input class="oMeta" placeholder="Meta">
+<button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+</div>`;
         }
 
         function addDropOpt(which) {
-            const box = which === 1 ? drop1Options : drop2Options;
             const wrap = document.createElement("div");
             wrap.className = "optWrap";
             wrap.innerHTML = which === 1 ? optTemplateDrop1() : optTemplateDrop2();
-            box.appendChild(wrap);
+            (which === 1 ? drop1Options : drop2Options).appendChild(wrap);
         }
 
         function readDrop1Options() {
-            const wraps = Array.from(drop1Options.querySelectorAll(".optWrap"));
-            return wraps.map(w => {
-                const label = w.querySelector(".oLabel")?.value?.trim() || "";
-                const img = w.querySelector(".oImg")?.value?.trim() || "";
-
-                const pu = limpiarNumero(w.querySelector(".oPU")?.value);
-                const pb = limpiarNumero(w.querySelector(".oPB")?.value);
-                const bc = limpiarNumero(w.querySelector(".oBC")?.value);
-
-                if (!label) return null;
-                return { label, img: img || null, precio_unidad: pu, precio_bulto: pb, bulto_cant: bc };
-            }).filter(Boolean);
+            return [...drop1Options.querySelectorAll(".optWrap")].map(w => ({
+                label: w.querySelector(".oLabel").value,
+                img: w.querySelector(".oImg").value || null,
+                precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
+                precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
+                bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
+            })).filter(x => x.label);
         }
 
         function readDrop2Options() {
-            const wraps = Array.from(drop2Options.querySelectorAll(".optWrap"));
-            return wraps.map(w => {
-                const label = w.querySelector(".oLabel")?.value?.trim() || "";
-                const meta = w.querySelector(".oMeta")?.value?.trim() || "";
-                if (!label) return null;
-                return { label, meta: meta || null };
-            }).filter(Boolean);
+            return [...drop2Options.querySelectorAll(".optWrap")].map(w => ({
+                label: w.querySelector(".oLabel").value,
+                meta: w.querySelector(".oMeta").value || null
+            })).filter(x => x.label);
         }
 
         function setDrop1Options(opts) {
             drop1Options.innerHTML = "";
             (opts || []).forEach(o => {
                 addDropOpt(1);
-                const last = drop1Options.querySelectorAll(".optWrap");
-                const w = last[last.length - 1];
-                w.querySelector(".oLabel").value = o.label || "";
+                const w = drop1Options.lastElementChild;
+                w.querySelector(".oLabel").value = o.label;
                 w.querySelector(".oImg").value = o.img || "";
                 w.querySelector(".oPU").value = formatearMiles(o.precio_unidad);
                 w.querySelector(".oPB").value = formatearMiles(o.precio_bulto);
@@ -542,38 +509,32 @@
             drop2Options.innerHTML = "";
             (opts || []).forEach(o => {
                 addDropOpt(2);
-                const last = drop2Options.querySelectorAll(".optWrap");
-                const w = last[last.length - 1];
-                w.querySelector(".oLabel").value = o.label || "";
+                const w = drop2Options.lastElementChild;
+                w.querySelector(".oLabel").value = o.label;
                 w.querySelector(".oMeta").value = o.meta || "";
             });
         }
 
-        // ======================
-        // Storage
-        // ======================
+
+        /* ======================================================
+           STORAGE
+        ====================================================== */
         async function upload(file) {
-            const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-            const name = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + ext;
-
-            const { error } = await sb.storage.from("productos").upload(name, file, { upsert: true });
-            if (error) throw error;
-
-            const pub = sb.storage.from("productos").getPublicUrl(name);
-            return pub?.publicURL || pub?.data?.publicUrl || "";
+            const name = crypto.randomUUID() + "." + file.name.split(".").pop();
+            await sb.storage.from("productos").upload(name, file, { upsert: true });
+            return sb.storage.from("productos").getPublicUrl(name).publicURL;
         }
 
-        // ======================
-        // Auth
-        // ======================
+
+        /* ======================================================
+           AUTH
+        ====================================================== */
         async function login() {
-            const mail = (email.value || "").trim();
-            const pass = (password.value || "").trim();
-            if (!mail || !pass) return alert("Poné email y password.");
-
-            const { error } = await sb.auth.signIn({ email: mail, password: pass });
+            const { error } = await sb.auth.signIn({
+                email: email.value,
+                password: password.value
+            });
             if (error) return alert(error.message);
-
             check();
         }
 
@@ -583,85 +544,149 @@
         }
 
         function check() {
-            const session = sb.auth.session();
-            if (session) {
+            if (sb.auth.session()) {
                 loginBox.classList.add("hidden");
                 panel.classList.remove("hidden");
                 cargar();
             }
         }
 
-        // ======================
-        // Guardar producto
-        // ======================
+
+        /* ======================================================
+           GUARDAR
+        ====================================================== */
         async function guardar() {
-            try {
-                const nombreVal = (nombre.value || "").trim();
-                if (!nombreVal) return alert("Poné un nombre de producto.");
 
-                let imgUrl = null;
-                if (imagenFile.files && imagenFile.files[0]) {
-                    imgUrl = await upload(imagenFile.files[0]);
+            const nombreVal = nombre.value.trim();
+            if (!nombreVal) return alert("Poné nombre");
+
+            let imgUrl = null;
+            if (imagenFile.files[0]) imgUrl = await upload(imagenFile.files[0]);
+
+            const pu = limpiarNumero(precioUnidad.value);
+            const pb = limpiarNumero(precioBulto.value);
+            const bc = limpiarNumero(bultoCant.value);
+
+            const d1 = hasDrop1.checked;
+            const d2 = hasDrop2.checked;
+
+            const variantes = (d1 || d2) ? {
+                precio_base: { unidad: pu, bulto: pb, bulto_cant: bc },
+                dropdowns: {
+                    drop1: d1 ? { placeholder: drop1Name.value, options: readDrop1Options() } : null,
+                    drop2: d2 ? { placeholder: drop2Name.value, options: readDrop2Options() } : null
                 }
+            } : null;
 
-                const slugVal = (slug.value || "").trim() || slugify(nombreVal);
+            const payload = {
+                nombre: nombreVal,
+                slug: slug.value || slugify(nombreVal),
+                descripcion: descripcion.value,
+                categoria: categoria.value,
+                imagen: imgUrl || null,
+                precio_unidad: pu,
+                precio_bulto: pb,
+                bulto_cant: bc,
+                variantes,
+                activo: true
+            };
 
-                const puBase = limpiarNumero(precioUnidad.value);
-                const pbBase = limpiarNumero(precioBulto.value);
-                const bcBase = limpiarNumero(bultoCant.value);
+            if (editId)
+                await sb.from("productos").update(payload).eq("id", editId);
+            else
+                await sb.from("productos").insert(payload);
 
-                const d1 = hasDrop1.checked;
-                const d2 = hasDrop2.checked;
-
-                const d1Placeholder = d1 ? (drop1Name.value || "").trim() : null;
-                const d2Placeholder = d2 ? (drop2Name.value || "").trim() : null;
-
-                const d1Opts = d1 ? readDrop1Options() : [];
-                const d2Opts = d2 ? readDrop2Options() : [];
-
-                const variantes = {
-                    precio_base: { unidad: puBase, bulto: pbBase, bulto_cant: bcBase },
-                    dropdowns: {
-                        drop1: d1 ? { placeholder: d1Placeholder, options: d1Opts } : null,
-                        drop2: d2 ? { placeholder: d2Placeholder, options: d2Opts } : null
-                    }
-                };
-
-                const payload = {
-                    nombre: nombreVal,
-                    slug: slugVal,
-                    descripcion: (descripcion.value || "").trim(),
-                    categoria: (categoria.value || "").trim(),
-                    ...(imgUrl ? { imagen: imgUrl } : {}),
-
-                    // ✅ PRECIOS SIMPLES (SIEMPRE)
-                    precio_unidad: puBase,
-                    precio_bulto: pbBase,
-                    bulto_cant: bcBase,
-
-                    // ✅ VARIANTES (SOLO SI EXISTEN)
-                    variantes: (d1 || d2) ? variantes : null,
-
-                    activo: true,
-                    updated_at: new Date().toISOString()
-                };
-
-                if (editId) {
-                    await sb.from("productos").update(payload).eq("id", editId);
-                } else {
-                    await sb.from("productos").insert(payload);
-                }
-
-                location.reload();
-
-            } catch (e) {
-                alert("Error: " + (e?.message || e));
-            }
+            location.reload();
         }
 
-        // ======================
-        // Listado / init
-        // ======================
+
+        /* ======================================================
+           LISTADO
+        ====================================================== */
+        async function cargar() {
+            const { data } = await sb.from("productos").select("*").order("created_at", { ascending: false });
+            cache = data || [];
+            renderLista(cache);
+        }
+
+        function renderLista(arr) {
+            lista.innerHTML = "";
+            arr.forEach(p => {
+                const div = document.createElement("div");
+                div.className = "product-row";
+                div.innerHTML = `
+            <img src="${p.imagen || ''}">
+            <div class="info">
+                <b>${p.nombre}</b>
+                <small>${p.categoria || ''}</small>
+                <div class="meta">$${(p.precio_unidad || 0).toLocaleString("es-AR")}</div>
+            </div>
+            <div class="actions">
+                <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
+                <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
+            </div>
+        `;
+                lista.appendChild(div);
+            });
+        }
+
+
+        /* ======================================================
+           BUSCAR
+        ====================================================== */
+        search.oninput = () => {
+            const q = search.value.toLowerCase();
+            renderLista(cache.filter(p =>
+                p.nombre.toLowerCase().includes(q) ||
+                p.categoria?.toLowerCase().includes(q)
+            ));
+        };
+
+
+        /* ======================================================
+           EDITAR / ELIMINAR
+        ====================================================== */
+        function editar(id) {
+            const p = cache.find(x => x.id == id);
+            editId = id;
+
+            nombre.value = p.nombre;
+            descripcion.value = p.descripcion;
+            categoria.value = p.categoria;
+            slug.value = p.slug;
+
+            precioUnidad.value = formatearMiles(p.precio_unidad);
+            precioBulto.value = formatearMiles(p.precio_bulto);
+            bultoCant.value = formatearMiles(p.bulto_cant);
+
+            const v = p.variantes;
+
+            if (v?.dropdowns?.drop1) {
+                hasDrop1.checked = true;
+                drop1Name.value = v.dropdowns.drop1.placeholder;
+                setDrop1Options(v.dropdowns.drop1.options);
+            }
+
+            if (v?.dropdowns?.drop2) {
+                hasDrop2.checked = true;
+                drop2Name.value = v.dropdowns.drop2.placeholder;
+                setDrop2Options(v.dropdowns.drop2.options);
+            }
+
+            toggleDrops();
+            window.scrollTo(0, 0);
+        }
+
+        async function eliminar(id) {
+            if (!confirm("¿Eliminar?")) return;
+            await sb.from("productos").delete().eq("id", id);
+            cargar();
+        }
+
+
+        /* ======================================================
+           INIT
+        ====================================================== */
         check();
     </script>
 
