@@ -633,9 +633,15 @@
                     descripcion: (descripcion.value || "").trim(),
                     categoria: (categoria.value || "").trim(),
                     ...(imgUrl ? { imagen: imgUrl } : {}),
-                    dropdown1_placeholder: d1Placeholder,
-                    dropdown2_placeholder: d2Placeholder,
-                    variantes: variantes,
+
+                    // ✅ PRECIOS SIMPLES (SIEMPRE)
+                    precio_unidad: puBase,
+                    precio_bulto: pbBase,
+                    bulto_cant: bcBase,
+
+                    // ✅ VARIANTES (SOLO SI EXISTEN)
+                    variantes: (d1 || d2) ? variantes : null,
+
                     activo: true,
                     updated_at: new Date().toISOString()
                 };
