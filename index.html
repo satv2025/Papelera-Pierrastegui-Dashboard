@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Panel Admin | Papelera Pierrastegui</title>
+
+    <link rel="icon" href="https://mediastatic.papelerapierrastegui.com.ar/assets/images/favicon1.ico">
+
+    <!-- ✅ SUPABASE V1 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7"></script>
+
+    <style>
+        @import url('https://solargentinotv.com.ar/assets/fonts/Gilroy/Gilroy.css');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        * {
+            font-family: Gilroy !important;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f2f4f7;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .wrap {
+            max-width: 1400px;
+            margin: auto;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .topbar h1 {
+            margin: 0;
+            color: #ff7600;
+            font-weight: 900;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 18px;
+        }
+
+        @media(max-width:1100px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+            padding: 18px;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            color: #ff7600;
+        }
+
+        h3 {
+            margin: 14px 0 10px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        button {
+            background: #ff7600;
+            border: none;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        button:hover {
+            filter: brightness(.96);
+        }
+
+        .btn-ghost {
+            background: #eef2f7;
+            color: #111;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 12px;
+            margin: -6px 0 10px;
+        }
+
+        .switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .switch input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+        }
+
+        .switch span {
+            font-weight: 800;
+        }
+
+        .row2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media(max-width:520px) {
+            .row2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .options {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px;
+            background: #fafafa;
+            margin-bottom: 10px;
+        }
+
+        .opt {
+            display: grid;
+            grid-template-columns: 1fr 1fr 44px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .opt input {
+            margin: 0;
+        }
+
+        .opt .rm {
+            background: #eef2f7;
+            color: #111;
+        }
+
+        .optPrices {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        @media(max-width:520px) {
+            .optPrices {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .product-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            border-radius: 14px;
+            margin-bottom: 10px;
+        }
+
+        .product-row img {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info b {
+            display: block;
+            font-weight: 900;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info small {
+            color: #6b7280;
+            font-weight: 700;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .info .meta {
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .mini {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .login {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            max-width: 380px;
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgb(0 0 0 / 18%);
+            padding: 26px;
+        }
+
+        .login-card h2 {
+            margin: 0 0 10px;
+            color: #ff7600;
+        }
+    </style>
+
+    <script>
+        // ✅ UN SOLO CLIENTE. NO window.sb. NO sb.js externo.
+        const sb = supabase.createClient(
+            "https://moacgzwrvegpoatwjqto.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vYWNnendydmVncG9hdHdqcXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyOTM5MDQsImV4cCI6MjA4NDg2OTkwNH0.WGzWhO1KYKTXKLaIXIpE1OLs6o4BJK-Q4JLK_RPZkGM"
+        );
+    </script>
+</head>
+
+<body>
+
+    <!-- LOGIN -->
+    <div id="loginBox" class="login">
+        <div class="login-card">
+            <h2>Panel Admin</h2>
+            <div class="muted">Ingresá con un usuario autorizado.</div>
+            <input id="email" placeholder="Email">
+            <input id="password" type="password" placeholder="Password">
+            <button style="width:100%" onclick="login()">Entrar</button>
+        </div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="panel" class="hidden">
+        <div class="wrap">
+
+            <div class="topbar">
+                <h1>Productos</h1>
+                <button class="btn-ghost" onclick="logout()">Cerrar sesión</button>
+            </div>
+
+            <div class="grid">
+
+                <!-- FORM -->
+                <div class="card">
+                    <h2 id="formTitle">Nuevo producto</h2>
+
+                    <input id="nombre" placeholder="Nombre del producto">
+                    <textarea id="descripcion" rows="4" placeholder="Descripción"></textarea>
+                    <input id="categoria" placeholder="Categoría">
+                    <input id="slug" placeholder="Slug (si lo dejás vacío se autogenera)">
+
+                    <input type="file" id="imagenFile" accept="image/*">
+                    <div class="muted">La imagen se sube a Supabase Storage (bucket: <b>productos</b>).</div>
+
+                    <!-- DROPDOWNS -->
+                    <div class="switch">
+                        <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
+                        <span>Dropdown</span>
+                    </div>
+
+                    <div id="drop1Box" class="hidden options">
+                        <input id="drop1Name" placeholder="Placeholder dropdown 1 (Tamaño / Color)">
+                        <div class="muted">Ej: “Seleccioná el tamaño” / “Elegí un color”.</div>
+
+                        <div id="drop1Options"></div>
+                        <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(1)">+ Agregar
+                            opción</button>
+                        <div class="muted">Cada opción puede tener imagen y precios (unidad/bulto). También podés
+                            definir bulto por opción.</div>
+                    </div>
+
+                    <div class="switch">
+                        <input type="checkbox" id="hasDrop2" onchange="toggleDrops()">
+                        <span>Dropdown adicional</span>
+                    </div>
+
+                    <div id="drop2Box" class="hidden options">
+                        <input id="drop2Name" placeholder="Placeholder dropdown 2 (Tipo: Unidad / Bulto)">
+                        <div class="muted">Ej: “Seleccioná el tipo”.</div>
+
+                        <div id="drop2Options"></div>
+                        <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(2)">+ Agregar
+                            opción</button>
+                        <div class="muted">Normalmente: “Unidad (1)” y “Bulto (X)”. Si no cargás opciones, se ignora.
+                        </div>
+                    </div>
+
+                    <!-- UNIDAD / BULTO -->
+                    <h3>Unidad / Bulto</h3>
+                    <div class="muted">
+                        Esto define: <b>Unidad (1)</b> y <b>Bulto (X)</b>. Se usa para precio fijo y como fallback si
+                        una opción no trae precio.
+                    </div>
+
+                    <div class="row2">
+                        <input id="precioUnidad" type="number" placeholder="Precio Unidad (1)">
+                        <input id="precioBulto" type="number" placeholder="Precio Bulto (X)">
+                    </div>
+                    <input id="bultoCant" type="number" placeholder="Cantidad de paquetes por bulto (ej: 12)">
+
+                    <button style="width:100%;margin-top:6px" onclick="guardar()">Guardar</button>
+                    <button id="cancelEdit" class="btn-ghost hidden" style="width:100%;margin-top:10px"
+                        onclick="cancelarEdicion()">Cancelar edición</button>
+                </div>
+
+                <!-- LISTA -->
+                <div class="card">
+                    <h2>Listado</h2>
+                    <input id="search" placeholder="Buscar por nombre o categoría...">
+                    <div id="lista"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================
+        // Estado
+        // ======================
+        let editId = null;
+        let cache = [];
+
+        // ======================
+        // 🔥 FORMATO NUMÉRICO MILES (NUEVO)
+        // ======================
+        function formatearMiles(valor) {
+            if (!valor) return "";
+            const num = String(valor).replace(/\D/g, "");
+            return Number(num).toLocaleString("es-AR");
+        }
+
+        function limpiarNumero(valor) {
+            return Number(String(valor).replace(/\D/g, "")) || 0;
+        }
+
+        function activarInputNumerico(input) {
+            if (!input) return;
+
+            input.type = "text";
+
+            input.addEventListener("input", e => {
+                const limpio = e.target.value.replace(/\D/g, "");
+                e.target.value = formatearMiles(limpio);
+            });
+
+            input.addEventListener("keypress", e => {
+                if (!/[0-9]/.test(e.key)) e.preventDefault();
+            });
+        }
+
+        // activar base
+        setTimeout(() => {
+            activarInputNumerico(precioUnidad);
+            activarInputNumerico(precioBulto);
+            activarInputNumerico(bultoCant);
+        }, 0);
+
+        // activar dropdowns dinámicos
+        document.addEventListener("input", e => {
+            if (
+                e.target.classList.contains("oPU") ||
+                e.target.classList.contains("oPB") ||
+                e.target.classList.contains("oBC")
+            ) {
+                const limpio = e.target.value.replace(/\D/g, "");
+                e.target.value = formatearMiles(limpio);
+            }
+        });
+
+        // ======================
+        // Helpers
+        // ======================
+        function slugify(str) {
+            return (str || "")
+                .toLowerCase()
+                .trim()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-");
+        }
+
+        function toggleDrops() {
+            drop1Box.classList.toggle("hidden", !hasDrop1.checked);
+            drop2Box.classList.toggle("hidden", !hasDrop2.checked);
+        }
+
+        // ======================
+        // Templates opciones
+        // ======================
+        function optTemplateDrop1() {
+            return `
+        <div class="opt">
+          <input class="oLabel" placeholder="Opción (20x30 / Rojo / A4)">
+          <input class="oImg" placeholder="URL Imagen (opcional)">
+          <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
+        </div>
+
+        <div class="optPrices">
+          <input class="oPU" type="text" placeholder="Precio Unidad (opcional)">
+          <input class="oPB" type="text" placeholder="Precio Bulto (opcional)">
+          <input class="oBC" type="text" placeholder="Bulto Cant (opcional)">
+        </div>
+      `;
+        }
+
+        function optTemplateDrop2() {
+            return `
+        <div class="opt">
+          <input class="oLabel" placeholder="Opción (Unidad (1) / Bulto (12))">
+          <input class="oMeta" placeholder="Meta (opcional, ej: unidad|bulto)">
+          <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
+        </div>
+      `;
+        }
+
+        function addDropOpt(which) {
+            const box = which === 1 ? drop1Options : drop2Options;
+            const wrap = document.createElement("div");
+            wrap.className = "optWrap";
+            wrap.innerHTML = which === 1 ? optTemplateDrop1() : optTemplateDrop2();
+            box.appendChild(wrap);
+        }
+
+        function readDrop1Options() {
+            const wraps = Array.from(drop1Options.querySelectorAll(".optWrap"));
+            return wraps.map(w => {
+                const label = w.querySelector(".oLabel")?.value?.trim() || "";
+                const img = w.querySelector(".oImg")?.value?.trim() || "";
+
+                const pu = limpiarNumero(w.querySelector(".oPU")?.value);
+                const pb = limpiarNumero(w.querySelector(".oPB")?.value);
+                const bc = limpiarNumero(w.querySelector(".oBC")?.value);
+
+                if (!label) return null;
+                return { label, img: img || null, precio_unidad: pu, precio_bulto: pb, bulto_cant: bc };
+            }).filter(Boolean);
+        }
+
+        function readDrop2Options() {
+            const wraps = Array.from(drop2Options.querySelectorAll(".optWrap"));
+            return wraps.map(w => {
+                const label = w.querySelector(".oLabel")?.value?.trim() || "";
+                const meta = w.querySelector(".oMeta")?.value?.trim() || "";
+                if (!label) return null;
+                return { label, meta: meta || null };
+            }).filter(Boolean);
+        }
+
+        function setDrop1Options(opts) {
+            drop1Options.innerHTML = "";
+            (opts || []).forEach(o => {
+                addDropOpt(1);
+                const last = drop1Options.querySelectorAll(".optWrap");
+                const w = last[last.length - 1];
+                w.querySelector(".oLabel").value = o.label || "";
+                w.querySelector(".oImg").value = o.img || "";
+                w.querySelector(".oPU").value = formatearMiles(o.precio_unidad);
+                w.querySelector(".oPB").value = formatearMiles(o.precio_bulto);
+                w.querySelector(".oBC").value = formatearMiles(o.bulto_cant);
+            });
+        }
+
+        function setDrop2Options(opts) {
+            drop2Options.innerHTML = "";
+            (opts || []).forEach(o => {
+                addDropOpt(2);
+                const last = drop2Options.querySelectorAll(".optWrap");
+                const w = last[last.length - 1];
+                w.querySelector(".oLabel").value = o.label || "";
+                w.querySelector(".oMeta").value = o.meta || "";
+            });
+        }
+
+        // ======================
+        // Storage
+        // ======================
+        async function upload(file) {
+            const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+            const name = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + ext;
+
+            const { error } = await sb.storage.from("productos").upload(name, file, { upsert: true });
+            if (error) throw error;
+
+            const pub = sb.storage.from("productos").getPublicUrl(name);
+            return pub?.publicURL || pub?.data?.publicUrl || "";
+        }
+
+        // ======================
+        // Auth
+        // ======================
+        async function login() {
+            const mail = (email.value || "").trim();
+            const pass = (password.value || "").trim();
+            if (!mail || !pass) return alert("Poné email y password.");
+
+            const { error } = await sb.auth.signIn({ email: mail, password: pass });
+            if (error) return alert(error.message);
+
+            check();
+        }
+
+        async function logout() {
+            await sb.auth.signOut();
+            location.reload();
+        }
+
+        function check() {
+            const session = sb.auth.session();
+            if (session) {
+                loginBox.classList.add("hidden");
+                panel.classList.remove("hidden");
+                cargar();
+            }
+        }
+
+        // ======================
+        // Guardar producto
+        // ======================
+        async function guardar() {
+            try {
+                const nombreVal = (nombre.value || "").trim();
+                if (!nombreVal) return alert("Poné un nombre de producto.");
+
+                let imgUrl = null;
+                if (imagenFile.files && imagenFile.files[0]) {
+                    imgUrl = await upload(imagenFile.files[0]);
+                }
+
+                const slugVal = (slug.value || "").trim() || slugify(nombreVal);
+
+                const puBase = limpiarNumero(precioUnidad.value);
+                const pbBase = limpiarNumero(precioBulto.value);
+                const bcBase = limpiarNumero(bultoCant.value);
+
+                const d1 = hasDrop1.checked;
+                const d2 = hasDrop2.checked;
+
+                const d1Placeholder = d1 ? (drop1Name.value || "").trim() : null;
+                const d2Placeholder = d2 ? (drop2Name.value || "").trim() : null;
+
+                const d1Opts = d1 ? readDrop1Options() : [];
+                const d2Opts = d2 ? readDrop2Options() : [];
+
+                const variantes = {
+                    precio_base: { unidad: puBase, bulto: pbBase, bulto_cant: bcBase },
+                    dropdowns: {
+                        drop1: d1 ? { placeholder: d1Placeholder, options: d1Opts } : null,
+                        drop2: d2 ? { placeholder: d2Placeholder, options: d2Opts } : null
+                    }
+                };
+
+                const payload = {
+                    nombre: nombreVal,
+                    slug: slugVal,
+                    descripcion: (descripcion.value || "").trim(),
+                    categoria: (categoria.value || "").trim(),
+                    ...(imgUrl ? { imagen: imgUrl } : {}),
+                    dropdown1_placeholder: d1Placeholder,
+                    dropdown2_placeholder: d2Placeholder,
+                    variantes: variantes,
+                    activo: true,
+                    updated_at: new Date().toISOString()
+                };
+
+                if (editId) {
+                    await sb.from("productos").update(payload).eq("id", editId);
+                } else {
+                    await sb.from("productos").insert(payload);
+                }
+
+                location.reload();
+
+            } catch (e) {
+                alert("Error: " + (e?.message || e));
+            }
+        }
+
+        // ======================
+        // Listado / init
+        // ======================
+        check();
+    </script>
+
+</body>
+
+</html>
