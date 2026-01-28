@@ -331,7 +331,7 @@
                     <!-- DROPDOWNS -->
                     <div class="switch">
                         <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
-                        <span>Dropdown</span>
+                        <span>Menú 1 (tamaño, color, etc)</span>
                     </div>
 
                     <div id="drop1Box" class="hidden options">
@@ -347,7 +347,7 @@
 
                     <div class="switch">
                         <input type="checkbox" id="hasDrop2" onchange="toggleDrops()">
-                        <span>Dropdown adicional</span>
+                        <span>Menú 2 (tipo: unidad / bulto)</span>
                     </div>
 
                     <div id="drop2Box" class="hidden options">
@@ -441,6 +441,20 @@
             drop2Box.classList.toggle("hidden", !hasDrop2.checked);
         }
 
+        function resetForm() {
+            editId = null;
+            formTitle.innerText = "Nuevo producto";
+            document.querySelectorAll("input, textarea").forEach(i => {
+                if (i.type !== "checkbox" && i.type !== "file") i.value = "";
+            });
+
+            hasDrop1.checked = false;
+            hasDrop2.checked = false;
+            drop1Options.innerHTML = "";
+            drop2Options.innerHTML = "";
+            toggleDrops();
+        }
+
 
         /* ======================================================
            OPCIONES DROPDOWN
@@ -492,37 +506,24 @@
             })).filter(x => x.label);
         }
 
-        function setDrop1Options(opts) {
-            drop1Options.innerHTML = "";
-            (opts || []).forEach(o => {
-                addDropOpt(1);
-                const w = drop1Options.lastElementChild;
-                w.querySelector(".oLabel").value = o.label;
-                w.querySelector(".oImg").value = o.img || "";
-                w.querySelector(".oPU").value = formatearMiles(o.precio_unidad);
-                w.querySelector(".oPB").value = formatearMiles(o.precio_bulto);
-                w.querySelector(".oBC").value = formatearMiles(o.bulto_cant);
-            });
-        }
-
-        function setDrop2Options(opts) {
-            drop2Options.innerHTML = "";
-            (opts || []).forEach(o => {
-                addDropOpt(2);
-                const w = drop2Options.lastElementChild;
-                w.querySelector(".oLabel").value = o.label;
-                w.querySelector(".oMeta").value = o.meta || "";
-            });
-        }
-
 
         /* ======================================================
-           STORAGE
+           STORAGE (CON ERROR HANDLING)
         ====================================================== */
         async function upload(file) {
             const name = crypto.randomUUID() + "." + file.name.split(".").pop();
-            await sb.storage.from("productos").upload(name, file, { upsert: true });
-            return sb.storage.from("productos").getPublicUrl(name).publicURL;
+
+            const { error } = await sb.storage
+                .from("productos")
+                .upload(name, file, { upsert: true });
+
+            if (error) {
+                console.error("UPLOAD ERROR:", error);
+                throw new Error("Error subiendo imagen: " + error.message);
+            }
+
+            const { publicURL } = sb.storage.from("productos").getPublicUrl(name);
+            return publicURL;
         }
 
 
@@ -534,7 +535,9 @@
                 email: email.value,
                 password: password.value
             });
+
             if (error) return alert(error.message);
+
             check();
         }
 
@@ -553,50 +556,56 @@
 
 
         /* ======================================================
-           GUARDAR
+           GUARDAR (ARREGLADO)
         ====================================================== */
         async function guardar() {
+            try {
+                const nombreVal = nombre.value.trim();
+                if (!nombreVal) return alert("Poné nombre");
 
-            const nombreVal = nombre.value.trim();
-            if (!nombreVal) return alert("Poné nombre");
-
-            let imgUrl = null;
-            if (imagenFile.files[0]) imgUrl = await upload(imagenFile.files[0]);
-
-            const pu = limpiarNumero(precioUnidad.value);
-            const pb = limpiarNumero(precioBulto.value);
-            const bc = limpiarNumero(bultoCant.value);
-
-            const d1 = hasDrop1.checked;
-            const d2 = hasDrop2.checked;
-
-            const variantes = (d1 || d2) ? {
-                precio_base: { unidad: pu, bulto: pb, bulto_cant: bc },
-                dropdowns: {
-                    drop1: d1 ? { placeholder: drop1Name.value, options: readDrop1Options() } : null,
-                    drop2: d2 ? { placeholder: drop2Name.value, options: readDrop2Options() } : null
+                let imgUrl = null;
+                if (imagenFile.files[0]) {
+                    imgUrl = await upload(imagenFile.files[0]);
                 }
-            } : null;
 
-            const payload = {
-                nombre: nombreVal,
-                slug: slug.value || slugify(nombreVal),
-                descripcion: descripcion.value,
-                categoria: categoria.value,
-                imagen: imgUrl || null,
-                precio_unidad: pu,
-                precio_bulto: pb,
-                bulto_cant: bc,
-                variantes,
-                activo: true
-            };
+                const pu = limpiarNumero(precioUnidad.value);
+                const pb = limpiarNumero(precioBulto.value);
+                const bc = limpiarNumero(bultoCant.value);
 
-            if (editId)
-                await sb.from("productos").update(payload).eq("id", editId);
-            else
-                await sb.from("productos").insert(payload);
+                const payload = {
+                    nombre: nombreVal,
+                    slug: slug.value || slugify(nombreVal),
+                    descripcion: descripcion.value,
+                    categoria: categoria.value,
+                    imagen: imgUrl,
+                    precio_unidad: pu,
+                    precio_bulto: pb,
+                    bulto_cant: bc,
+                    activo: true
+                };
 
-            location.reload();
+                let res;
+
+                if (editId) {
+                    res = await sb.from("productos").update(payload).eq("id", editId);
+                } else {
+                    res = await sb.from("productos").insert(payload);
+                }
+
+                if (res.error) {
+                    console.error(res.error);
+                    return alert("Error guardando: " + res.error.message);
+                }
+
+                await cargar();
+                resetForm();
+
+                alert("✅ Guardado correctamente");
+
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            }
         }
 
 
@@ -604,13 +613,23 @@
            LISTADO
         ====================================================== */
         async function cargar() {
-            const { data } = await sb.from("productos").select("*").order("created_at", { ascending: false });
+            const { data, error } = await sb
+                .from("productos")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                console.error(error);
+                return alert("Error cargando productos");
+            }
+
             cache = data || [];
             renderLista(cache);
         }
 
         function renderLista(arr) {
             lista.innerHTML = "";
+
             arr.forEach(p => {
                 const div = document.createElement("div");
                 div.className = "product-row";
@@ -650,6 +669,8 @@
             const p = cache.find(x => x.id == id);
             editId = id;
 
+            formTitle.innerText = "Editar producto";
+
             nombre.value = p.nombre;
             descripcion.value = p.descripcion;
             categoria.value = p.categoria;
@@ -659,27 +680,16 @@
             precioBulto.value = formatearMiles(p.precio_bulto);
             bultoCant.value = formatearMiles(p.bulto_cant);
 
-            const v = p.variantes;
-
-            if (v?.dropdowns?.drop1) {
-                hasDrop1.checked = true;
-                drop1Name.value = v.dropdowns.drop1.placeholder;
-                setDrop1Options(v.dropdowns.drop1.options);
-            }
-
-            if (v?.dropdowns?.drop2) {
-                hasDrop2.checked = true;
-                drop2Name.value = v.dropdowns.drop2.placeholder;
-                setDrop2Options(v.dropdowns.drop2.options);
-            }
-
-            toggleDrops();
             window.scrollTo(0, 0);
         }
 
         async function eliminar(id) {
             if (!confirm("¿Eliminar?")) return;
-            await sb.from("productos").delete().eq("id", id);
+
+            const { error } = await sb.from("productos").delete().eq("id", id);
+
+            if (error) return alert(error.message);
+
             cargar();
         }
 
