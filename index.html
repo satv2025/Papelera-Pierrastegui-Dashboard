@@ -328,6 +328,30 @@
                     <input type="file" id="imagenFile" accept="image/*">
                     <div class="muted">La imagen se sube a Supabase Storage (bucket: <b>productos</b>).</div>
 
+                    <h3>Estado / Stock</h3>
+
+                    <div class="switch">
+                        <input type="checkbox" id="nuevo">
+                        <span>NUEVO</span>
+                    </div>
+
+                    <div class="switch">
+                        <input type="checkbox" id="sinStock">
+                        <span>SIN STOCK</span>
+                    </div>
+
+                    <input id="stock" type="number" placeholder="Stock disponible">
+
+
+                    <h3>Oferta</h3>
+
+                    <div class="switch">
+                        <input type="checkbox" id="oferta">
+                        <span>En oferta</span>
+                    </div>
+
+                    <input id="descuento" type="number" placeholder="Descuento % (ej: 15)">
+
                     <!-- DROPDOWNS -->
                     <div class="switch">
                         <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
@@ -412,7 +436,10 @@
         }
 
         function activarInputNumerico(input) {
+            if (!input) return;
+
             input.type = "text";
+
             input.addEventListener("input", e => {
                 e.target.value = formatearMiles(e.target.value);
             });
@@ -422,7 +449,16 @@
             activarInputNumerico(precioUnidad);
             activarInputNumerico(precioBulto);
             activarInputNumerico(bultoCant);
+            activarInputNumerico(descuento);
         }, 0);
+
+
+        /* ======================================================
+           AUTO STOCK → SIN STOCK
+        ====================================================== */
+        stock.oninput = e => {
+            sinStock.checked = Number(e.target.value) === 0;
+        };
 
 
         /* ======================================================
@@ -441,23 +477,35 @@
             drop2Box.classList.toggle("hidden", !hasDrop2.checked);
         }
 
+
+        /* ======================================================
+           RESET FORM
+        ====================================================== */
         function resetForm() {
             editId = null;
+
             formTitle.innerText = "Nuevo producto";
+
             document.querySelectorAll("input, textarea").forEach(i => {
                 if (i.type !== "checkbox" && i.type !== "file") i.value = "";
             });
 
             hasDrop1.checked = false;
             hasDrop2.checked = false;
+
+            nuevo.checked = false;
+            sinStock.checked = false;
+            oferta.checked = false;
+
             drop1Options.innerHTML = "";
             drop2Options.innerHTML = "";
+
             toggleDrops();
         }
 
 
         /* ======================================================
-           OPCIONES DROPDOWN
+           DROPDOWNS
         ====================================================== */
         function optTemplateDrop1() {
             return `
@@ -490,25 +538,29 @@
         }
 
         function readDrop1Options() {
-            return [...drop1Options.querySelectorAll(".optWrap")].map(w => ({
-                label: w.querySelector(".oLabel").value,
-                img: w.querySelector(".oImg").value || null,
-                precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
-                precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
-                bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
-            })).filter(x => x.label);
+            return [...drop1Options.querySelectorAll(".optWrap")]
+                .map(w => ({
+                    label: w.querySelector(".oLabel").value,
+                    img: w.querySelector(".oImg").value || null,
+                    precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
+                    precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
+                    bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
+                }))
+                .filter(x => x.label);
         }
 
         function readDrop2Options() {
-            return [...drop2Options.querySelectorAll(".optWrap")].map(w => ({
-                label: w.querySelector(".oLabel").value,
-                meta: w.querySelector(".oMeta").value || null
-            })).filter(x => x.label);
+            return [...drop2Options.querySelectorAll(".optWrap")]
+                .map(w => ({
+                    label: w.querySelector(".oLabel").value,
+                    meta: w.querySelector(".oMeta").value || null
+                }))
+                .filter(x => x.label);
         }
 
 
         /* ======================================================
-           STORAGE (CON ERROR HANDLING)
+           STORAGE
         ====================================================== */
         async function upload(file) {
             const name = crypto.randomUUID() + "." + file.name.split(".").pop();
@@ -517,12 +569,10 @@
                 .from("productos")
                 .upload(name, file, { upsert: true });
 
-            if (error) {
-                console.error("UPLOAD ERROR:", error);
-                throw new Error("Error subiendo imagen: " + error.message);
-            }
+            if (error) throw error;
 
             const { publicURL } = sb.storage.from("productos").getPublicUrl(name);
+
             return publicURL;
         }
 
@@ -556,7 +606,7 @@
 
 
         /* ======================================================
-           GUARDAR (ARREGLADO)
+           GUARDAR
         ====================================================== */
         async function guardar() {
             try {
@@ -564,13 +614,10 @@
                 if (!nombreVal) return alert("Poné nombre");
 
                 let imgUrl = null;
+
                 if (imagenFile.files[0]) {
                     imgUrl = await upload(imagenFile.files[0]);
                 }
-
-                const pu = limpiarNumero(precioUnidad.value);
-                const pb = limpiarNumero(precioBulto.value);
-                const bc = limpiarNumero(bultoCant.value);
 
                 const payload = {
                     nombre: nombreVal,
@@ -578,33 +625,36 @@
                     descripcion: descripcion.value,
                     categoria: categoria.value,
                     imagen: imgUrl,
-                    precio_unidad: pu,
-                    precio_bulto: pb,
-                    bulto_cant: bc,
-                    activo: true
+
+                    precio_unidad: limpiarNumero(precioUnidad.value),
+                    precio_bulto: limpiarNumero(precioBulto.value),
+                    bulto_cant: limpiarNumero(bultoCant.value),
+
+                    activo: true,
+
+                    /* ESTADO */
+                    nuevo: nuevo.checked,
+                    sin_stock: sinStock.checked,
+                    stock: parseInt(stock.value) || 0,
+
+                    /* OFERTA */
+                    oferta: oferta.checked,
+                    descuento: parseInt(descuento.value) || 0
                 };
 
-                let res;
+                const res = editId
+                    ? await sb.from("productos").update(payload).eq("id", editId)
+                    : await sb.from("productos").insert(payload);
 
-                if (editId) {
-                    res = await sb.from("productos").update(payload).eq("id", editId);
-                } else {
-                    res = await sb.from("productos").insert(payload);
-                }
-
-                if (res.error) {
-                    console.error(res.error);
-                    return alert("Error guardando: " + res.error.message);
-                }
+                if (res.error) throw res.error;
 
                 await cargar();
                 resetForm();
 
-                alert("✅ Guardado correctamente");
+                alert("✅ Guardado");
 
             } catch (e) {
-                console.error(e);
-                alert("Error: " + e.message);
+                alert(e.message);
             }
         }
 
@@ -618,10 +668,7 @@
                 .select("*")
                 .order("created_at", { ascending: false });
 
-            if (error) {
-                console.error(error);
-                return alert("Error cargando productos");
-            }
+            if (error) return alert(error.message);
 
             cache = data || [];
             renderLista(cache);
@@ -631,20 +678,37 @@
             lista.innerHTML = "";
 
             arr.forEach(p => {
+                const precioFinal = p.oferta
+                    ? Math.round(p.precio_unidad * (1 - p.descuento / 100))
+                    : p.precio_unidad;
+
                 const div = document.createElement("div");
+
                 div.className = "product-row";
+
                 div.innerHTML = `
             <img src="${p.imagen || ''}">
             <div class="info">
                 <b>${p.nombre}</b>
                 <small>${p.categoria || ''}</small>
-                <div class="meta">$${(p.precio_unidad || 0).toLocaleString("es-AR")}</div>
+
+                <div class="meta">
+                    ${p.oferta
+                        ? `<s>$${p.precio_unidad.toLocaleString("es-AR")}</s> 
+                           <b style="color:#d32f2f">$${precioFinal.toLocaleString("es-AR")} (-${p.descuento}%)</b>`
+                        : `$${precioFinal.toLocaleString("es-AR")}`}
+                </div>
+
+                ${p.nuevo ? "🟢 NUEVO " : ""}
+                ${p.sin_stock || p.stock === 0 ? "🔴 SIN STOCK" : ""}
             </div>
+
             <div class="actions">
                 <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
                 <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
             </div>
         `;
+
                 lista.appendChild(div);
             });
         }
@@ -655,6 +719,7 @@
         ====================================================== */
         search.oninput = () => {
             const q = search.value.toLowerCase();
+
             renderLista(cache.filter(p =>
                 p.nombre.toLowerCase().includes(q) ||
                 p.categoria?.toLowerCase().includes(q)
@@ -663,10 +728,11 @@
 
 
         /* ======================================================
-           EDITAR / ELIMINAR
+           EDITAR
         ====================================================== */
         function editar(id) {
             const p = cache.find(x => x.id == id);
+
             editId = id;
 
             formTitle.innerText = "Editar producto";
@@ -680,9 +746,20 @@
             precioBulto.value = formatearMiles(p.precio_bulto);
             bultoCant.value = formatearMiles(p.bulto_cant);
 
+            nuevo.checked = p.nuevo;
+            sinStock.checked = p.sin_stock;
+            stock.value = p.stock;
+
+            oferta.checked = p.oferta;
+            descuento.value = p.descuento;
+
             window.scrollTo(0, 0);
         }
 
+
+        /* ======================================================
+           ELIMINAR
+        ====================================================== */
         async function eliminar(id) {
             if (!confirm("¿Eliminar?")) return;
 
