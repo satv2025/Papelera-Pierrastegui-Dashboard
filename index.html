@@ -320,36 +320,36 @@
                 <div class="card">
                     <h2 id="formTitle">Nuevo producto</h2>
 
+                    <!-- Nombre y Descripción -->
                     <input id="nombre" placeholder="Nombre del producto">
                     <textarea id="descripcion" rows="4" placeholder="Descripción"></textarea>
                     <input id="categoria" placeholder="Categoría">
                     <input id="slug" placeholder="Slug (si lo dejás vacío se autogenera)">
 
+                    <!-- Subida de imagen -->
                     <input type="file" id="imagenFile" accept="image/*">
-                    <div class="muted">La imagen se sube a Supabase Storage (bucket: <b>productos</b>).</div>
+                    <div class="muted">
+                        La imagen se sube a Supabase Storage (bucket: <b>productos</b>).
+                    </div>
 
+                    <!-- Estado / Stock -->
                     <h3>Estado / Stock</h3>
-
                     <div class="switch">
                         <input type="checkbox" id="nuevo">
                         <span>NUEVO</span>
                     </div>
-
                     <div class="switch">
                         <input type="checkbox" id="sinStock">
                         <span>SIN STOCK</span>
                     </div>
-
                     <input id="stock" type="number" placeholder="Stock disponible">
 
-
+                    <!-- Oferta -->
                     <h3>Oferta</h3>
-
                     <div class="switch">
                         <input type="checkbox" id="oferta">
                         <span>En oferta</span>
                     </div>
-
                     <input id="descuento" type="number" placeholder="Descuento % (ej: 15)">
 
                     <!-- DROPDOWNS -->
@@ -357,11 +357,9 @@
                         <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
                         <span>Menú 1 (tamaño, color, etc)</span>
                     </div>
-
                     <div id="drop1Box" class="hidden options">
                         <input id="drop1Name" placeholder="Placeholder dropdown 1 (Tamaño / Color)">
                         <div class="muted">Ej: “Seleccioná el tamaño” / “Elegí un color”.</div>
-
                         <div id="drop1Options"></div>
                         <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(1)">+ Agregar
                             opción</button>
@@ -373,11 +371,9 @@
                         <input type="checkbox" id="hasDrop2" onchange="toggleDrops()">
                         <span>Menú 2 (tipo: unidad / bulto)</span>
                     </div>
-
                     <div id="drop2Box" class="hidden options">
                         <input id="drop2Name" placeholder="Placeholder dropdown 2 (Tipo: Unidad / Bulto)">
                         <div class="muted">Ej: “Seleccioná el tipo”.</div>
-
                         <div id="drop2Options"></div>
                         <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(2)">+ Agregar
                             opción</button>
@@ -391,13 +387,13 @@
                         Esto define: <b>Unidad (1)</b> y <b>Bulto (X)</b>. Se usa para precio fijo y como fallback si
                         una opción no trae precio.
                     </div>
-
                     <div class="row2">
                         <input id="precioUnidad" type="number" placeholder="Precio Unidad (1)">
                         <input id="precioBulto" type="number" placeholder="Precio Bulto (X)">
                     </div>
                     <input id="bultoCant" type="number" placeholder="Cantidad de paquetes por bulto (ej: 12)">
 
+                    <!-- Botones de acción -->
                     <button style="width:100%;margin-top:6px" onclick="guardar()">Guardar</button>
                     <button id="cancelEdit" class="btn-ghost hidden" style="width:100%;margin-top:10px"
                         onclick="cancelarEdicion()">Cancelar edición</button>
@@ -416,15 +412,14 @@
 
     <script>
         /* ======================================================
-           ESTADO
-        ====================================================== */
+       ESTADO
+    ===================================================== */
         let editId = null;
         let cache = [];
 
-
         /* ======================================================
            NUMÉRICOS (miles)
-        ====================================================== */
+        ===================================================== */
         function formatearMiles(valor) {
             if (!valor) return "";
             const num = String(valor).replace(/\D/g, "");
@@ -452,18 +447,16 @@
             activarInputNumerico(descuento);
         }, 0);
 
-
         /* ======================================================
            AUTO STOCK → SIN STOCK
-        ====================================================== */
+        ===================================================== */
         stock.oninput = e => {
             sinStock.checked = Number(e.target.value) === 0;
         };
 
-
         /* ======================================================
            HELPERS
-        ====================================================== */
+        ===================================================== */
         function slugify(str) {
             return (str || "")
                 .toLowerCase()
@@ -477,10 +470,9 @@
             drop2Box.classList.toggle("hidden", !hasDrop2.checked);
         }
 
-
         /* ======================================================
            RESET FORM
-        ====================================================== */
+        ===================================================== */
         function resetForm() {
             editId = null;
 
@@ -503,31 +495,30 @@
             toggleDrops();
         }
 
-
         /* ======================================================
            DROPDOWNS
-        ====================================================== */
+        ===================================================== */
         function optTemplateDrop1() {
             return `
-<div class="opt">
-<input class="oLabel" placeholder="Opción">
-<input class="oImg" placeholder="URL imagen">
-<button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
-</div>
-<div class="optPrices">
-<input class="oPU" placeholder="Precio Unidad">
-<input class="oPB" placeholder="Precio Bulto">
-<input class="oBC" placeholder="Bulto Cant">
-</div>`;
+    <div class="opt">
+        <input class="oLabel" placeholder="Opción">
+        <input class="oImg" placeholder="URL imagen">
+        <button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+    </div>
+    <div class="optPrices">
+        <input class="oPU" placeholder="Precio Unidad">
+        <input class="oPB" placeholder="Precio Bulto">
+        <input class="oBC" placeholder="Bulto Cant">
+    </div>`;
         }
 
         function optTemplateDrop2() {
             return `
-<div class="opt">
-<input class="oLabel" placeholder="Opción">
-<input class="oMeta" placeholder="Meta">
-<button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
-</div>`;
+    <div class="opt">
+        <input class="oLabel" placeholder="Opción">
+        <input class="oMeta" placeholder="Meta">
+        <button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+    </div>`;
         }
 
         function addDropOpt(which) {
@@ -558,10 +549,9 @@
                 .filter(x => x.label);
         }
 
-
         /* ======================================================
            STORAGE
-        ====================================================== */
+        ===================================================== */
         async function upload(file) {
             const name = crypto.randomUUID() + "." + file.name.split(".").pop();
 
@@ -576,10 +566,9 @@
             return publicURL;
         }
 
-
         /* ======================================================
            AUTH
-        ====================================================== */
+        ===================================================== */
         async function login() {
             const { error } = await sb.auth.signIn({
                 email: email.value,
@@ -604,10 +593,9 @@
             }
         }
 
-
         /* ======================================================
            GUARDAR
-        ====================================================== */
+        ===================================================== */
         async function guardar() {
             try {
                 const nombreVal = nombre.value.trim();
@@ -639,7 +627,15 @@
 
                     /* OFERTA */
                     oferta: oferta.checked,
-                    descuento: parseInt(descuento.value) || 0
+                    descuento: parseInt(descuento.value) || 0,
+
+                    /* DROPDOWNS */
+                    dropdown1_placeholder: drop1Name.value || 'Selecciona el tamaño',
+                    dropdown2_placeholder: drop2Name.value || 'Selecciona el tipo',
+                    variantes: JSON.stringify({
+                        drop1: readDrop1Options(),
+                        drop2: readDrop2Options()
+                    })
                 };
 
                 const res = editId
@@ -658,10 +654,9 @@
             }
         }
 
-
         /* ======================================================
            LISTADO
-        ====================================================== */
+        ===================================================== */
         async function cargar() {
             const { data, error } = await sb
                 .from("productos")
@@ -691,18 +686,15 @@
             <div class="info">
                 <b>${p.nombre}</b>
                 <small>${p.categoria || ''}</small>
-
                 <div class="meta">
                     ${p.oferta
                         ? `<s>$${p.precio_unidad.toLocaleString("es-AR")}</s> 
-                           <b style="color:#d32f2f">$${precioFinal.toLocaleString("es-AR")} (-${p.descuento}%)</b>`
+                               <b style="color:#d32f2f">$${precioFinal.toLocaleString("es-AR")} (-${p.descuento}%)</b>`
                         : `$${precioFinal.toLocaleString("es-AR")}`}
                 </div>
-
                 ${p.nuevo ? "🟢 NUEVO " : ""}
                 ${p.sin_stock || p.stock === 0 ? "🔴 SIN STOCK" : ""}
             </div>
-
             <div class="actions">
                 <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
                 <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
@@ -713,10 +705,9 @@
             });
         }
 
-
         /* ======================================================
            BUSCAR
-        ====================================================== */
+        ===================================================== */
         search.oninput = () => {
             const q = search.value.toLowerCase();
 
@@ -726,10 +717,9 @@
             ));
         };
 
-
         /* ======================================================
            EDITAR
-        ====================================================== */
+        ===================================================== */
         function editar(id) {
             const p = cache.find(x => x.id == id);
 
@@ -753,13 +743,37 @@
             oferta.checked = p.oferta;
             descuento.value = p.descuento;
 
+            // Asignar los dropdowns
+            drop1Name.value = p.dropdown1_placeholder || 'Selecciona el tamaño';
+            drop2Name.value = p.dropdown2_placeholder || 'Selecciona el tipo';
+
+            // Cargar opciones de variantes
+            if (p.variantes) {
+                const variantes = JSON.parse(p.variantes);
+                variantes.drop1.forEach(v => {
+                    addDropOpt(1);
+                    const lastOpt = drop1Options.lastElementChild;
+                    lastOpt.querySelector(".oLabel").value = v.label;
+                    lastOpt.querySelector(".oImg").value = v.img || '';
+                    lastOpt.querySelector(".oPU").value = v.precio_unidad;
+                    lastOpt.querySelector(".oPB").value = v.precio_bulto;
+                    lastOpt.querySelector(".oBC").value = v.bulto_cant;
+                });
+
+                variantes.drop2.forEach(v => {
+                    addDropOpt(2);
+                    const lastOpt = drop2Options.lastElementChild;
+                    lastOpt.querySelector(".oLabel").value = v.label;
+                    lastOpt.querySelector(".oMeta").value = v.meta || '';
+                });
+            }
+
             window.scrollTo(0, 0);
         }
 
-
         /* ======================================================
            ELIMINAR
-        ====================================================== */
+        ===================================================== */
         async function eliminar(id) {
             if (!confirm("¿Eliminar?")) return;
 
@@ -770,10 +784,9 @@
             cargar();
         }
 
-
         /* ======================================================
            INIT
-        ====================================================== */
+        ===================================================== */
         check();
     </script>
 
