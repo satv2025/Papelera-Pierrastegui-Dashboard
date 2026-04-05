@@ -1,795 +1,787 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Panel Admin | Papelera Pierrastegui</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Panel Admin | Papelera Pierrastegui</title>
 
-    <link rel="icon" href="https://mediastatic.papelerapierrastegui.com.ar/assets/images/favicon1.ico">
+        <link rel="stylesheet" href="assets/css/ppSupabase.css">
+        <link rel="icon" href="https://mediastatic.papelerapierrastegui.com.ar/assets/images/favicon1.ico">
 
-    <!-- ✅ SUPABASE V1 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7"></script>
+        <script src="assets/js/ppSupabase.js"></script>
+    </head>
 
-    <style>
-        @import url('https://solargentinotv.com.ar/assets/fonts/Gilroy/Gilroy.css');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+    <body>
 
-        * {
-            font-family: Gilroy !important;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f2f4f7;
-            margin: 0;
-            min-height: 100vh;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .wrap {
-            max-width: 1400px;
-            margin: auto;
-            padding: 28px;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .topbar h1 {
-            margin: 0;
-            color: #ff7600;
-            font-weight: 900;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 460px 1fr;
-            gap: 18px;
-        }
-
-        @media(max-width:1100px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
-            padding: 18px;
-        }
-
-        h2 {
-            margin: 0 0 10px;
-            color: #ff7600;
-        }
-
-        h3 {
-            margin: 14px 0 10px;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            outline: none;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
-
-        button {
-            background: #ff7600;
-            border: none;
-            color: #fff;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        button:hover {
-            filter: brightness(.96);
-        }
-
-        .btn-ghost {
-            background: #eef2f7;
-            color: #111;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-        }
-
-        .muted {
-            color: #6b7280;
-            font-size: 12px;
-            margin: -6px 0 10px;
-        }
-
-        .switch {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid #e5e7eb;
-            background: #fafafa;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        .switch input {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-        }
-
-        .switch span {
-            font-weight: 800;
-        }
-
-        .row2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        @media(max-width:520px) {
-            .row2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .options {
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 10px;
-            background: #fafafa;
-            margin-bottom: 10px;
-        }
-
-        .opt {
-            display: grid;
-            grid-template-columns: 1fr 1fr 44px;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .opt input {
-            margin: 0;
-        }
-
-        .opt .rm {
-            background: #eef2f7;
-            color: #111;
-        }
-
-        .optPrices {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        @media(max-width:520px) {
-            .optPrices {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .product-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            background: #fafafa;
-            border-radius: 14px;
-            margin-bottom: 10px;
-        }
-
-        .product-row img {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            object-fit: cover;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-        }
-
-        .info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .info b {
-            display: block;
-            font-weight: 900;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .info small {
-            color: #6b7280;
-            font-weight: 700;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .info .meta {
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .mini {
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        .login {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-card {
-            max-width: 380px;
-            width: 100%;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgb(0 0 0 / 18%);
-            padding: 26px;
-        }
-
-        .login-card h2 {
-            margin: 0 0 10px;
-            color: #ff7600;
-        }
-    </style>
-
-    <script>
-        // ✅ UN SOLO CLIENTE. NO window.sb. NO sb.js externo.
-        const sb = supabase.createClient(
-            "https://cdnstatic.papelerapierrastegui.com.ar",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vYWNnendydmVncG9hdHdqcXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyOTM5MDQsImV4cCI6MjA4NDg2OTkwNH0.WGzWhO1KYKTXKLaIXIpE1OLs6o4BJK-Q4JLK_RPZkGM"
-        );
-    </script>
-</head>
-
-<body>
-
-    <!-- LOGIN -->
-    <div id="loginBox" class="login">
-        <div class="login-card">
-            <h2>Panel Admin</h2>
-            <div class="muted">Ingresá con un usuario autorizado.</div>
-            <input id="email" placeholder="Email">
-            <input id="password" type="password" placeholder="Password">
-            <button style="width:100%" onclick="login()">Entrar</button>
-        </div>
-    </div>
-
-    <!-- PANEL -->
-    <div id="panel" class="hidden">
-        <div class="wrap">
-
-            <div class="topbar">
-                <h1>Productos</h1>
-                <button class="btn-ghost" onclick="logout()">Cerrar sesión</button>
+        <div id="loginBox" class="login">
+            <div class="login-card">
+                <h2>Panel Admin</h2>
+                <div class="muted">Ingresá con un usuario autorizado.</div>
+                <input id="email" placeholder="Email">
+                <input id="password" type="password" placeholder="Password">
+                <button style="width:100%" onclick="login()">Entrar</button>
             </div>
+        </div>
 
-            <div class="grid">
+        <div id="panel" class="hidden">
+            <div class="wrap">
 
-                <!-- FORM -->
-                <div class="card">
-                    <h2 id="formTitle">Nuevo producto</h2>
+                <div class="topbar">
+                    <h1>Productos</h1>
+                    <button class="btn-ghost" onclick="logout()">Cerrar sesión</button>
+                </div>
 
-                    <!-- Nombre y Descripción -->
-                    <input id="nombre" placeholder="Nombre del producto">
-                    <textarea id="descripcion" rows="4" placeholder="Descripción"></textarea>
-                    <input id="categoria" placeholder="Categoría">
-                    <input id="slug" placeholder="Slug (si lo dejás vacío se autogenera)">
+                <div class="grid">
 
-                    <!-- Subida de imagen -->
-                    <input type="file" id="imagenFile" accept="image/*">
-                    <div class="muted">
-                        La imagen se sube a Supabase Storage (bucket: <b>productos</b>).
-                    </div>
+                    <div class="card">
+                        <h2 id="formTitle">Nuevo producto</h2>
 
-                    <!-- Estado / Stock -->
-                    <h3>Estado / Stock</h3>
-                    <div class="switch">
-                        <input type="checkbox" id="nuevo">
-                        <span>NUEVO</span>
-                    </div>
-                    <div class="switch">
-                        <input type="checkbox" id="sinStock">
-                        <span>SIN STOCK</span>
-                    </div>
-                    <input id="stock" type="number" placeholder="Stock disponible">
+                        <input id="nombre" placeholder="Nombre del producto">
+                        <textarea id="descripcion" rows="4" placeholder="Descripción"></textarea>
+                        <input id="categoria" placeholder="Categoría">
+                        <input id="slug" placeholder="Slug (si lo dejás vacío se autogenera)">
 
-                    <!-- Oferta -->
-                    <h3>Oferta</h3>
-                    <div class="switch">
-                        <input type="checkbox" id="oferta">
-                        <span>En oferta</span>
-                    </div>
-                    <input id="descuento" type="number" placeholder="Descuento % (ej: 15)">
+                        <!-- UPLOAD PRINCIPAL CUSTOM -->
+                        <h3>Imagen principal</h3>
+                        <input type="file" id="imagenFile" accept="image/*" hidden>
 
-                    <!-- DROPDOWNS -->
-                    <div class="switch">
-                        <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
-                        <span>Menú 1 (tamaño, color, etc)</span>
-                    </div>
-                    <div id="drop1Box" class="hidden options">
-                        <input id="drop1Name" placeholder="Placeholder dropdown 1 (Tamaño / Color)">
-                        <div class="muted">Ej: “Seleccioná el tamaño” / “Elegí un color”.</div>
-                        <div id="drop1Options"></div>
-                        <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(1)">+ Agregar
-                            opción</button>
-                        <div class="muted">Cada opción puede tener imagen y precios (unidad/bulto). También podés
-                            definir bulto por opción.</div>
-                    </div>
+                        <div class="uploadBox" id="mainUploadBox">
+                            <div class="uploadInner">
+                                <div class="uploadIcon">🖼️</div>
+                                <div class="uploadTexts">
+                                    <strong>Subir imagen principal</strong>
+                                    <span id="mainUploadText">Hacé click o arrastrá una imagen acá</span>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="switch">
-                        <input type="checkbox" id="hasDrop2" onchange="toggleDrops()">
-                        <span>Menú 2 (tipo: unidad / bulto)</span>
-                    </div>
-                    <div id="drop2Box" class="hidden options">
-                        <input id="drop2Name" placeholder="Placeholder dropdown 2 (Tipo: Unidad / Bulto)">
-                        <div class="muted">Ej: “Seleccioná el tipo”.</div>
-                        <div id="drop2Options"></div>
-                        <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(2)">+ Agregar
-                            opción</button>
-                        <div class="muted">Normalmente: “Unidad (1)” y “Bulto (X)”. Si no cargás opciones, se ignora.
+                        <div id="currentImageBox" class="current-image hidden">
+                            <div class="muted">Imagen actual</div>
+                            <img id="currentImagePreview" alt="Imagen actual del producto">
+                        </div>
+
+                        <h3>Estado / Stock</h3>
+                        <div class="switch">
+                            <input type="checkbox" id="nuevo">
+                            <span>NUEVO</span>
+                        </div>
+
+                        <div class="switch">
+                            <input type="checkbox" id="sinStock">
+                            <span>SIN STOCK</span>
+                        </div>
+
+                        <input id="stock" type="text" placeholder="Stock disponible">
+
+                        <h3>Oferta</h3>
+                        <div class="switch">
+                            <input type="checkbox" id="oferta">
+                            <span>En oferta</span>
+                        </div>
+
+                        <input id="descuento" type="text" placeholder="Descuento % (ej: 15)">
+
+                        <h3>Dropdowns</h3>
+
+                        <div class="switch">
+                            <input type="checkbox" id="hasDrop1" onchange="toggleDrops()">
+                            <span>Menú 1 (modelo: tamaño, color, medida, etc.)</span>
+                        </div>
+
+                        <div id="drop1Box" class="hidden options">
+                            <input id="drop1Name" placeholder="Placeholder dropdown 1 (Ej: Seleccioná el tamaño)">
+                            <div class="muted">
+                                Cada opción puede tener imagen, precio por unidad, precio por bulto y cantidad por
+                                bulto.
+                            </div>
+
+                            <div id="drop1Options"></div>
+
+                            <button class="btn-ghost" style="width:100%" type="button" onclick="addDropOpt(1)">
+                                + Agregar modelo
+                            </button>
+                        </div>
+
+                        <div class="switch">
+                            <input type="checkbox" id="hasDrop2" onchange="toggleDrops()">
+                            <span>Menú 2 (tipo de venta)</span>
+                        </div>
+
+                        <div id="drop2Box" class="hidden options">
+                            <input id="drop2Name" placeholder="Placeholder dropdown 2 (Ej: Seleccioná el tipo)">
+                            <div class="muted">
+                                Este dropdown se usa para <b>Por Unidad</b> y <b>Por Bulto</b>.
+                            </div>
+
+                            <div id="drop2Options"></div>
+
+                            <div class="row2">
+                                <button class="btn-ghost" type="button" onclick="setDefaultDrop2Options()">
+                                    Restaurar opciones por defecto
+                                </button>
+                                <button class="btn-ghost" type="button" onclick="clearDrop2Options()">
+                                    Limpiar opciones
+                                </button>
+                            </div>
+                        </div>
+
+                        <h3>Precios base / fallback</h3>
+                        <div class="muted">
+                            Estos valores se usan si una variante del dropdown 1 no trae precio propio.
+                        </div>
+
+                        <div class="row2">
+                            <input id="precioUnidad" type="text" placeholder="Precio Unidad">
+                            <input id="precioBulto" type="text" placeholder="Precio Bulto">
+                        </div>
+
+                        <input id="bultoCant" type="text" placeholder="Cantidad por bulto (ej: 12)">
+
+                        <div class="actions-sticky">
+                            <button style="width:100%;margin-top:6px" onclick="guardar()">Guardar</button>
+                            <button id="cancelEdit" class="btn-ghost hidden" style="width:100%;margin-top:10px"
+                                onclick="cancelarEdicion()">Cancelar edición</button>
                         </div>
                     </div>
 
-                    <!-- UNIDAD / BULTO -->
-                    <h3>Unidad / Bulto</h3>
-                    <div class="muted">
-                        Esto define: <b>Unidad (1)</b> y <b>Bulto (X)</b>. Se usa para precio fijo y como fallback si
-                        una opción no trae precio.
+                    <div class="card">
+                        <h2>Listado</h2>
+                        <input id="search" placeholder="Buscar por nombre o categoría...">
+                        <div id="lista"></div>
                     </div>
-                    <div class="row2">
-                        <input id="precioUnidad" type="number" placeholder="Precio Unidad (1)">
-                        <input id="precioBulto" type="number" placeholder="Precio Bulto (X)">
-                    </div>
-                    <input id="bultoCant" type="number" placeholder="Cantidad de paquetes por bulto (ej: 12)">
 
-                    <!-- Botones de acción -->
-                    <button style="width:100%;margin-top:6px" onclick="guardar()">Guardar</button>
-                    <button id="cancelEdit" class="btn-ghost hidden" style="width:100%;margin-top:10px"
-                        onclick="cancelarEdicion()">Cancelar edición</button>
                 </div>
-
-                <!-- LISTA -->
-                <div class="card">
-                    <h2>Listado</h2>
-                    <input id="search" placeholder="Buscar por nombre o categoría...">
-                    <div id="lista"></div>
-                </div>
-
             </div>
         </div>
-    </div>
 
-    <script>
-        /* ======================================================
-       ESTADO
-    ===================================================== */
-        let editId = null;
-        let cache = [];
+        <script>
+            let editId = null;
+            let cache = [];
 
-        /* ======================================================
-           NUMÉRICOS (miles)
-        ===================================================== */
-        function formatearMiles(valor) {
-            if (!valor) return "";
-            const num = String(valor).replace(/\D/g, "");
-            return Number(num).toLocaleString("es-AR");
-        }
+            const $ = (id) => document.getElementById(id);
 
-        function limpiarNumero(valor) {
-            return Number(String(valor).replace(/\D/g, "")) || 0;
-        }
-
-        function activarInputNumerico(input) {
-            if (!input) return;
-
-            input.type = "text";
-
-            input.addEventListener("input", e => {
-                e.target.value = formatearMiles(e.target.value);
-            });
-        }
-
-        setTimeout(() => {
-            activarInputNumerico(precioUnidad);
-            activarInputNumerico(precioBulto);
-            activarInputNumerico(bultoCant);
-            activarInputNumerico(descuento);
-        }, 0);
-
-        /* ======================================================
-           AUTO STOCK → SIN STOCK
-        ===================================================== */
-        stock.oninput = e => {
-            sinStock.checked = Number(e.target.value) === 0;
-        };
-
-        /* ======================================================
-           HELPERS
-        ===================================================== */
-        function slugify(str) {
-            return (str || "")
-                .toLowerCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/[^a-z0-9\s-]/g, "")
-                .replace(/\s+/g, "-");
-        }
-
-        function toggleDrops() {
-            drop1Box.classList.toggle("hidden", !hasDrop1.checked);
-            drop2Box.classList.toggle("hidden", !hasDrop2.checked);
-        }
-
-        /* ======================================================
-           RESET FORM
-        ===================================================== */
-        function resetForm() {
-            editId = null;
-
-            formTitle.innerText = "Nuevo producto";
-
-            document.querySelectorAll("input, textarea").forEach(i => {
-                if (i.type !== "checkbox" && i.type !== "file") i.value = "";
-            });
-
-            hasDrop1.checked = false;
-            hasDrop2.checked = false;
-
-            nuevo.checked = false;
-            sinStock.checked = false;
-            oferta.checked = false;
-
-            drop1Options.innerHTML = "";
-            drop2Options.innerHTML = "";
-
-            toggleDrops();
-        }
-
-        /* ======================================================
-           DROPDOWNS
-        ===================================================== */
-        function optTemplateDrop1() {
-            return `
-    <div class="opt">
-        <input class="oLabel" placeholder="Opción">
-        <input class="oImg" placeholder="URL imagen">
-        <button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
-    </div>
-    <div class="optPrices">
-        <input class="oPU" placeholder="Precio Unidad">
-        <input class="oPB" placeholder="Precio Bulto">
-        <input class="oBC" placeholder="Bulto Cant">
-    </div>`;
-        }
-
-        function optTemplateDrop2() {
-            return `
-    <div class="opt">
-        <input class="oLabel" placeholder="Opción">
-        <input class="oMeta" placeholder="Meta">
-        <button class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
-    </div>`;
-        }
-
-        function addDropOpt(which) {
-            const wrap = document.createElement("div");
-            wrap.className = "optWrap";
-            wrap.innerHTML = which === 1 ? optTemplateDrop1() : optTemplateDrop2();
-            (which === 1 ? drop1Options : drop2Options).appendChild(wrap);
-        }
-
-        function readDrop1Options() {
-            return [...drop1Options.querySelectorAll(".optWrap")]
-                .map(w => ({
-                    label: w.querySelector(".oLabel").value,
-                    img: w.querySelector(".oImg").value || null,
-                    precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
-                    precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
-                    bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
-                }))
-                .filter(x => x.label);
-        }
-
-        function readDrop2Options() {
-            return [...drop2Options.querySelectorAll(".optWrap")]
-                .map(w => ({
-                    label: w.querySelector(".oLabel").value,
-                    meta: w.querySelector(".oMeta").value || null
-                }))
-                .filter(x => x.label);
-        }
-
-        /* ======================================================
-           STORAGE
-        ===================================================== */
-        async function upload(file) {
-            const name = crypto.randomUUID() + "." + file.name.split(".").pop();
-
-            const { error } = await sb.storage
-                .from("productos")
-                .upload(name, file, { upsert: true });
-
-            if (error) throw error;
-
-            const { publicURL } = sb.storage.from("productos").getPublicUrl(name);
-
-            return publicURL;
-        }
-
-        /* ======================================================
-           AUTH
-        ===================================================== */
-        async function login() {
-            const { error } = await sb.auth.signIn({
-                email: email.value,
-                password: password.value
-            });
-
-            if (error) return alert(error.message);
-
-            check();
-        }
-
-        async function logout() {
-            await sb.auth.signOut();
-            location.reload();
-        }
-
-        function check() {
-            if (sb.auth.session()) {
-                loginBox.classList.add("hidden");
-                panel.classList.remove("hidden");
-                cargar();
+            function formatearMiles(valor) {
+                if (valor === null || valor === undefined || valor === "") return "";
+                const num = String(valor).replace(/\D/g, "");
+                if (!num) return "";
+                return Number(num).toLocaleString("es-AR");
             }
-        }
 
-        /* ======================================================
-           GUARDAR
-        ===================================================== */
-        async function guardar() {
-            try {
-                const nombreVal = nombre.value.trim();
-                if (!nombreVal) return alert("Poné nombre");
+            function limpiarNumero(valor) {
+                return Number(String(valor || "").replace(/\D/g, "")) || 0;
+            }
 
-                let imgUrl = null;
+            function activarInputNumerico(input) {
+                if (!input) return;
+                input.type = "text";
+                input.addEventListener("input", e => {
+                    e.target.value = formatearMiles(e.target.value);
+                });
+            }
 
-                if (imagenFile.files[0]) {
-                    imgUrl = await upload(imagenFile.files[0]);
+            function activarNumericosBase() {
+                [
+                    $("precioUnidad"),
+                    $("precioBulto"),
+                    $("bultoCant"),
+                    $("descuento"),
+                    $("stock")
+                ].forEach(activarInputNumerico);
+            }
+
+            function slugify(str) {
+                return (str || "")
+                    .toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^a-z0-9\s-]/g, "")
+                    .replace(/\s+/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-|-$/g, "");
+            }
+
+            function parseVariantes(raw) {
+                if (!raw) return { drop1: [], drop2: [] };
+
+                if (typeof raw === "string") {
+                    try {
+                        return JSON.parse(raw);
+                    } catch {
+                        return { drop1: [], drop2: [] };
+                    }
                 }
 
-                const payload = {
-                    nombre: nombreVal,
-                    slug: slug.value || slugify(nombreVal),
-                    descripcion: descripcion.value,
-                    categoria: categoria.value,
-                    imagen: imgUrl,
+                return raw;
+            }
 
-                    precio_unidad: limpiarNumero(precioUnidad.value),
-                    precio_bulto: limpiarNumero(precioBulto.value),
-                    bulto_cant: limpiarNumero(bultoCant.value),
+            function toggleDrops() {
+                $("drop1Box").classList.toggle("hidden", !$("hasDrop1").checked);
+                $("drop2Box").classList.toggle("hidden", !$("hasDrop2").checked);
 
-                    activo: true,
+                if ($("hasDrop2").checked) {
+                    if (!$("drop2Name").value.trim()) {
+                        $("drop2Name").value = "Seleccioná el tipo";
+                    }
 
-                    /* ESTADO */
-                    nuevo: nuevo.checked,
-                    sin_stock: sinStock.checked,
-                    stock: parseInt(stock.value) || 0,
+                    if (!$("drop2Options").children.length) {
+                        setDefaultDrop2Options();
+                    }
+                }
+            }
 
-                    /* OFERTA */
-                    oferta: oferta.checked,
-                    descuento: parseInt(descuento.value) || 0,
+            function resetForm() {
+                editId = null;
+                $("formTitle").innerText = "Nuevo producto";
 
-                    /* DROPDOWNS */
-                    dropdown1_placeholder: drop1Name.value || 'Selecciona el tamaño',
-                    dropdown2_placeholder: drop2Name.value || 'Selecciona el tipo',
-                    variantes: JSON.stringify({
-                        drop1: readDrop1Options(),
-                        drop2: readDrop2Options()
+                document.querySelectorAll("input, textarea").forEach(i => {
+                    if (i.type !== "checkbox" && i.type !== "file" && i.type !== "hidden") i.value = "";
+                });
+
+                $("imagenFile").value = "";
+
+                $("mainUploadText").textContent = "Hacé click o arrastrá una imagen acá";
+
+                $("hasDrop1").checked = false;
+                $("hasDrop2").checked = false;
+                $("nuevo").checked = false;
+                $("sinStock").checked = false;
+                $("oferta").checked = false;
+
+                $("drop1Name").value = "";
+                $("drop2Name").value = "";
+
+                $("drop1Options").innerHTML = "";
+                $("drop2Options").innerHTML = "";
+
+                $("currentImagePreview").src = "";
+                $("currentImageBox").classList.add("hidden");
+
+                $("cancelEdit").classList.add("hidden");
+
+                toggleDrops();
+            }
+
+            function cancelarEdicion() {
+                resetForm();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function optTemplateDrop1(item = {}) {
+                const hasImg = !!item.img;
+
+                return `
+                <div class="opt opt-model-top">
+                    <input class="oLabel" placeholder="Modelo / Variante" value="${item.label || ""}">
+                    <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
+                </div>
+
+                <div class="variantUploadBox">
+                    <input class="oImgFile" type="file" accept="image/*" hidden>
+                    <input class="oImg" type="hidden" value="${item.img || ""}">
+
+                    <div class="variantUploadInner">
+                        <div class="variantUploadLeft">
+                            <div class="uploadMiniIcon">📸</div>
+                            <div class="variantUploadMeta">
+                                <strong>Imagen de la variante</strong>
+                                <span class="variantUploadText">${hasImg ? "Imagen cargada" : "Subí o arrastrá una imagen"}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-ghost variantPickBtn">Elegir imagen</button>
+                    </div>
+
+                    <div class="variantPreviewWrap ${hasImg ? "" : "hidden"}">
+                        <img class="variantPreview" src="${item.img || ""}" alt="Preview variante">
+                    </div>
+                </div>
+
+                <div class="optPrices">
+                    <input class="oPU" placeholder="Precio Unidad" value="${formatearMiles(item.precio_unidad || 0)}">
+                    <input class="oPB" placeholder="Precio Bulto" value="${formatearMiles(item.precio_bulto || 0)}">
+                    <input class="oBC" placeholder="Bulto Cant" value="${formatearMiles(item.bulto_cant || 0)}">
+                </div>
+            `;
+            }
+
+            function optTemplateDrop2(label = "", meta = "") {
+                return `
+                <div class="opt opt-type">
+                    <input class="oLabel" placeholder="Opción" value="${label}">
+                    <input class="oMeta" placeholder="Meta (unidad / bulto)" value="${meta}">
+                    <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
+                </div>
+            `;
+            }
+
+            function wireDrop1Numerics(wrap) {
+                activarInputNumerico(wrap.querySelector(".oPU"));
+                activarInputNumerico(wrap.querySelector(".oPB"));
+                activarInputNumerico(wrap.querySelector(".oBC"));
+            }
+
+            function wireMainUpload() {
+                const fileInput = $("imagenFile");
+                const box = $("mainUploadBox");
+                const text = $("mainUploadText");
+
+                if (!fileInput || !box || !text) return;
+
+                box.addEventListener("click", () => fileInput.click());
+
+                fileInput.addEventListener("change", () => {
+                    const file = fileInput.files?.[0];
+                    text.textContent = file ? file.name : "Hacé click o arrastrá una imagen acá";
+                });
+
+                box.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    box.classList.add("dragover");
+                });
+
+                box.addEventListener("dragleave", () => {
+                    box.classList.remove("dragover");
+                });
+
+                box.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    box.classList.remove("dragover");
+
+                    const file = e.dataTransfer?.files?.[0];
+                    if (!file) return;
+
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+                    text.textContent = file.name;
+                });
+            }
+
+            function wireDrop1ImageUpload(wrap) {
+                const fileInput = wrap.querySelector(".oImgFile");
+                const hiddenUrl = wrap.querySelector(".oImg");
+                const pickBtn = wrap.querySelector(".variantPickBtn");
+                const uploadText = wrap.querySelector(".variantUploadText");
+                const uploadBox = wrap.querySelector(".variantUploadBox");
+                const previewWrap = wrap.querySelector(".variantPreviewWrap");
+                const preview = wrap.querySelector(".variantPreview");
+
+                if (!fileInput || !hiddenUrl || !pickBtn || !uploadText || !uploadBox || !previewWrap || !preview) return;
+
+                pickBtn.addEventListener("click", () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener("change", async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    try {
+                        uploadText.textContent = "Subiendo imagen...";
+                        pickBtn.disabled = true;
+
+                        const url = await upload(file);
+
+                        hiddenUrl.value = url;
+                        preview.src = url;
+                        previewWrap.classList.remove("hidden");
+                        uploadText.textContent = "Imagen cargada";
+                    } catch (err) {
+                        alert("Error al subir imagen de variante: " + (err.message || err));
+                        uploadText.textContent = "Error al subir";
+                    } finally {
+                        pickBtn.disabled = false;
+                    }
+                });
+
+                uploadBox.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    uploadBox.classList.add("dragover");
+                });
+
+                uploadBox.addEventListener("dragleave", () => {
+                    uploadBox.classList.remove("dragover");
+                });
+
+                uploadBox.addEventListener("drop", async (e) => {
+                    e.preventDefault();
+                    uploadBox.classList.remove("dragover");
+
+                    const file = e.dataTransfer?.files?.[0];
+                    if (!file) return;
+
+                    try {
+                        uploadText.textContent = "Subiendo imagen...";
+                        pickBtn.disabled = true;
+
+                        const url = await upload(file);
+
+                        hiddenUrl.value = url;
+                        preview.src = url;
+                        previewWrap.classList.remove("hidden");
+                        uploadText.textContent = "Imagen cargada";
+                    } catch (err) {
+                        alert("Error al subir imagen de variante: " + (err.message || err));
+                        uploadText.textContent = "Error al subir";
+                    } finally {
+                        pickBtn.disabled = false;
+                    }
+                });
+            }
+
+            function addDropOpt(which) {
+                const wrap = document.createElement("div");
+                wrap.className = "optWrap";
+
+                if (which === 1) {
+                    wrap.innerHTML = optTemplateDrop1();
+                    $("drop1Options").appendChild(wrap);
+                    wireDrop1Numerics(wrap);
+                    wireDrop1ImageUpload(wrap);
+                    return;
+                }
+
+                wrap.innerHTML = optTemplateDrop2();
+                $("drop2Options").appendChild(wrap);
+            }
+
+            function setDefaultDrop2Options() {
+                $("drop2Options").innerHTML = "";
+
+                const unidad = document.createElement("div");
+                unidad.className = "optWrap";
+                unidad.innerHTML = optTemplateDrop2("Por Unidad", "unidad");
+
+                const bulto = document.createElement("div");
+                bulto.className = "optWrap";
+                bulto.innerHTML = optTemplateDrop2("Por Bulto", "bulto");
+
+                $("drop2Options").appendChild(unidad);
+                $("drop2Options").appendChild(bulto);
+            }
+
+            function clearDrop2Options() {
+                $("drop2Options").innerHTML = "";
+            }
+
+            function readDrop1Options() {
+                return [...$("drop1Options").querySelectorAll(".optWrap")]
+                    .map(w => ({
+                        label: (w.querySelector(".oLabel").value || "").trim(),
+                        img: (w.querySelector(".oImg").value || "").trim() || null,
+                        precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
+                        precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
+                        bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
+                    }))
+                    .filter(x => x.label);
+            }
+
+            function readDrop2Options() {
+                return [...$("drop2Options").querySelectorAll(".optWrap")]
+                    .map(w => {
+                        const label = (w.querySelector(".oLabel").value || "").trim();
+                        let meta = (w.querySelector(".oMeta").value || "").trim().toLowerCase();
+
+                        if (!label) return null;
+
+                        if (!meta) {
+                            if (label.toLowerCase().includes("bulto")) meta = "bulto";
+                            else meta = "unidad";
+                        }
+
+                        if (meta !== "unidad" && meta !== "bulto") {
+                            if (label.toLowerCase().includes("bulto")) meta = "bulto";
+                            else meta = "unidad";
+                        }
+
+                        return { label, meta };
                     })
-                };
+                    .filter(Boolean);
+            }
 
-                const res = editId
-                    ? await sb.from("productos").update(payload).eq("id", editId)
-                    : await sb.from("productos").insert(payload);
+            function loadDrop1Options(items = []) {
+                $("drop1Options").innerHTML = "";
 
-                if (res.error) throw res.error;
+                items.forEach(item => {
+                    const wrap = document.createElement("div");
+                    wrap.className = "optWrap";
+                    wrap.innerHTML = optTemplateDrop1(item);
+                    $("drop1Options").appendChild(wrap);
+                    wireDrop1Numerics(wrap);
+                    wireDrop1ImageUpload(wrap);
+                });
+            }
+
+            function loadDrop2Options(items = []) {
+                $("drop2Options").innerHTML = "";
+
+                items.forEach(item => {
+                    const wrap = document.createElement("div");
+                    wrap.className = "optWrap";
+                    wrap.innerHTML = optTemplateDrop2(item.label || "", item.meta || "");
+                    $("drop2Options").appendChild(wrap);
+                });
+            }
+
+            async function upload(file) {
+                const name = crypto.randomUUID() + "." + file.name.split(".").pop();
+
+                const { error } = await sb.storage
+                    .from("productos")
+                    .upload(name, file, { upsert: true });
+
+                if (error) throw error;
+
+                const { publicURL } = sb.storage.from("productos").getPublicUrl(name);
+                return publicURL;
+            }
+
+            async function login() {
+                const { error } = await sb.auth.signIn({
+                    email: $("email").value,
+                    password: $("password").value
+                });
+
+                if (error) return alert(error.message);
+
+                check();
+            }
+
+            async function logout() {
+                await sb.auth.signOut();
+                location.reload();
+            }
+
+            function check() {
+                if (sb.auth.session()) {
+                    $("loginBox").classList.add("hidden");
+                    $("panel").classList.remove("hidden");
+                    cargar();
+                }
+            }
+
+            async function guardar() {
+                try {
+                    const nombreVal = $("nombre").value.trim();
+                    if (!nombreVal) return alert("Poné nombre");
+
+                    const existing = editId
+                        ? (cache.find(x => x.id === editId) || null)
+                        : null;
+
+                    let imgUrl = existing?.imagen || null;
+
+                    if ($("imagenFile").files[0]) {
+                        imgUrl = await upload($("imagenFile").files[0]);
+                    }
+
+                    const payload = {
+                        nombre: nombreVal,
+                        slug: $("slug").value.trim() || slugify(nombreVal),
+                        descripcion: $("descripcion").value,
+                        categoria: $("categoria").value,
+                        imagen: imgUrl,
+
+                        precio_unidad: limpiarNumero($("precioUnidad").value),
+                        precio_bulto: limpiarNumero($("precioBulto").value),
+                        bulto_cant: limpiarNumero($("bultoCant").value),
+
+                        activo: true,
+                        nuevo: $("nuevo").checked,
+                        sin_stock: $("sinStock").checked,
+                        stock: limpiarNumero($("stock").value),
+
+                        oferta: $("oferta").checked,
+                        descuento: limpiarNumero($("descuento").value),
+
+                        dropdown1_placeholder: $("hasDrop1").checked
+                            ? ($("drop1Name").value.trim() || "Seleccioná una opción")
+                            : null,
+
+                        dropdown2_placeholder: $("hasDrop2").checked
+                            ? ($("drop2Name").value.trim() || "Seleccioná el tipo")
+                            : null,
+
+                        variantes: {
+                            drop1: $("hasDrop1").checked ? readDrop1Options() : [],
+                            drop2: $("hasDrop2").checked ? readDrop2Options() : []
+                        }
+                    };
+
+                    if ($("hasDrop2").checked && payload.variantes.drop2.length === 0) {
+                        payload.variantes.drop2 = [
+                            { label: "Por Unidad", meta: "unidad" },
+                            { label: "Por Bulto", meta: "bulto" }
+                        ];
+                    }
+
+                    const res = editId
+                        ? await sb.from("productos").update(payload).eq("id", editId)
+                        : await sb.from("productos").insert(payload);
+
+                    if (res.error) throw res.error;
+
+                    await cargar();
+                    resetForm();
+
+                    alert("✅ Guardado");
+                } catch (e) {
+                    alert(e.message || e);
+                }
+            }
+
+            async function cargar() {
+                const { data, error } = await sb
+                    .from("productos")
+                    .select("*")
+                    .order("created_at", { ascending: false });
+
+                if (error) return alert(error.message);
+
+                cache = data || [];
+                renderLista(cache);
+            }
+
+            function renderLista(arr) {
+                $("lista").innerHTML = "";
+
+                arr.forEach(p => {
+                    const variantes = parseVariantes(p.variantes);
+                    const tieneModelos = Array.isArray(variantes.drop1) && variantes.drop1.length > 0;
+                    const tieneTipos = Array.isArray(variantes.drop2) && variantes.drop2.length > 0;
+
+                    const precioFinal = p.oferta
+                        ? Math.round((p.precio_unidad || 0) * (1 - (p.descuento || 0) / 100))
+                        : (p.precio_unidad || 0);
+
+                    const div = document.createElement("div");
+                    div.className = "product-row";
+
+                    div.innerHTML = `
+                    <img src="${p.imagen || ""}" alt="${p.nombre || ""}">
+                    <div class="info">
+                        <b>${p.nombre || ""}</b>
+                        <small>${p.categoria || ""}</small>
+
+                        <div class="meta">
+                            ${p.oferta
+                            ? `<s>$${Number(p.precio_unidad || 0).toLocaleString("es-AR")}</s>
+                                   <b class="price-offer">$${Number(precioFinal).toLocaleString("es-AR")} (-${p.descuento || 0}%)</b>`
+                            : `$${Number(precioFinal).toLocaleString("es-AR")}`
+                        }
+                        </div>
+
+                        <div class="badges">
+                            ${p.nuevo ? `<span class="badge badge-ok">NUEVO</span>` : ""}
+                            ${(p.sin_stock || Number(p.stock || 0) === 0) ? `<span class="badge badge-danger">SIN STOCK</span>` : ""}
+                            ${tieneModelos ? `<span class="badge badge-soft">MODELOS</span>` : ""}
+                            ${tieneTipos ? `<span class="badge badge-soft">TIPOS</span>` : ""}
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
+                        <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
+                    </div>
+                `;
+
+                    $("lista").appendChild(div);
+                });
+            }
+
+            $("search").oninput = () => {
+                const q = $("search").value.toLowerCase();
+
+                renderLista(cache.filter(p =>
+                    (p.nombre || "").toLowerCase().includes(q) ||
+                    (p.categoria || "").toLowerCase().includes(q)
+                ));
+            };
+
+            function editar(id) {
+                const p = cache.find(x => x.id === id);
+                if (!p) return alert("No se pudo abrir el producto");
+
+                editId = p.id;
+                $("formTitle").innerText = "Editar producto";
+                $("cancelEdit").classList.remove("hidden");
+
+                $("nombre").value = p.nombre || "";
+                $("descripcion").value = p.descripcion || "";
+                $("categoria").value = p.categoria || "";
+                $("slug").value = p.slug || "";
+
+                $("precioUnidad").value = formatearMiles(p.precio_unidad || 0);
+                $("precioBulto").value = formatearMiles(p.precio_bulto || 0);
+                $("bultoCant").value = formatearMiles(p.bulto_cant || 0);
+
+                $("stock").value = formatearMiles(p.stock || 0);
+                $("descuento").value = formatearMiles(p.descuento || 0);
+
+                $("nuevo").checked = !!p.nuevo;
+                $("sinStock").checked = !!p.sin_stock;
+                $("oferta").checked = !!p.oferta;
+
+                $("imagenFile").value = "";
+                $("mainUploadText").textContent = "Hacé click o arrastrá una imagen acá";
+
+                if (p.imagen) {
+                    $("currentImagePreview").src = p.imagen;
+                    $("currentImageBox").classList.remove("hidden");
+                } else {
+                    $("currentImagePreview").src = "";
+                    $("currentImageBox").classList.add("hidden");
+                }
+
+                const variantes = parseVariantes(p.variantes);
+                const drop1 = Array.isArray(variantes.drop1) ? variantes.drop1 : [];
+                const drop2 = Array.isArray(variantes.drop2) ? variantes.drop2 : [];
+
+                $("hasDrop1").checked = drop1.length > 0;
+                $("hasDrop2").checked = drop2.length > 0;
+
+                $("drop1Name").value = p.dropdown1_placeholder || "";
+                $("drop2Name").value = p.dropdown2_placeholder || "";
+
+                toggleDrops();
+
+                loadDrop1Options(drop1);
+
+                if ($("hasDrop2").checked) {
+                    loadDrop2Options(drop2.length ? drop2 : [
+                        { label: "Por Unidad", meta: "unidad" },
+                        { label: "Por Bulto", meta: "bulto" }
+                    ]);
+                } else {
+                    $("drop2Options").innerHTML = "";
+                }
+
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            async function eliminar(id) {
+                const p = cache.find(x => x.id === id);
+                if (!p) return;
+
+                const ok = confirm(`¿Eliminar "${p.nombre}"?`);
+                if (!ok) return;
+
+                const { error } = await sb.from("productos").delete().eq("id", id);
+                if (error) return alert(error.message);
 
                 await cargar();
-                resetForm();
-
-                alert("✅ Guardado");
-
-            } catch (e) {
-                alert(e.message);
             }
-        }
 
-        /* ======================================================
-           LISTADO
-        ===================================================== */
-        async function cargar() {
-            const { data, error } = await sb
-                .from("productos")
-                .select("*")
-                .order("created_at", { ascending: false });
-
-            if (error) return alert(error.message);
-
-            cache = data || [];
-            renderLista(cache);
-        }
-
-        function renderLista(arr) {
-            lista.innerHTML = "";
-
-            arr.forEach(p => {
-                const precioFinal = p.oferta
-                    ? Math.round(p.precio_unidad * (1 - p.descuento / 100))
-                    : p.precio_unidad;
-
-                const div = document.createElement("div");
-
-                div.className = "product-row";
-
-                div.innerHTML = `
-            <img src="${p.imagen || ''}">
-            <div class="info">
-                <b>${p.nombre}</b>
-                <small>${p.categoria || ''}</small>
-                <div class="meta">
-                    ${p.oferta
-                        ? `<s>$${p.precio_unidad.toLocaleString("es-AR")}</s> 
-                               <b style="color:#d32f2f">$${precioFinal.toLocaleString("es-AR")} (-${p.descuento}%)</b>`
-                        : `$${precioFinal.toLocaleString("es-AR")}`}
-                </div>
-                ${p.nuevo ? "🟢 NUEVO " : ""}
-                ${p.sin_stock || p.stock === 0 ? "🔴 SIN STOCK" : ""}
-            </div>
-            <div class="actions">
-                <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
-                <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
-            </div>
-        `;
-
-                lista.appendChild(div);
+            $("stock").addEventListener("input", e => {
+                $("sinStock").checked = limpiarNumero(e.target.value) === 0;
             });
-        }
 
-        /* ======================================================
-           BUSCAR
-        ===================================================== */
-        search.oninput = () => {
-            const q = search.value.toLowerCase();
-
-            renderLista(cache.filter(p =>
-                p.nombre.toLowerCase().includes(q) ||
-                p.categoria?.toLowerCase().includes(q)
-            ));
-        };
-
-        /* ======================================================
-           EDITAR
-        ===================================================== */
-        function editar(id) {
-            const p = cache.find(x => x.id == id);
-
-            editId = id;
-
-            formTitle.innerText = "Editar producto";
-
-            nombre.value = p.nombre;
-            descripcion.value = p.descripcion;
-            categoria.value = p.categoria;
-            slug.value = p.slug;
-
-            precioUnidad.value = formatearMiles(p.precio_unidad);
-            precioBulto.value = formatearMiles(p.precio_bulto);
-            bultoCant.value = formatearMiles(p.bulto_cant);
-
-            nuevo.checked = p.nuevo;
-            sinStock.checked = p.sin_stock;
-            stock.value = p.stock;
-
-            oferta.checked = p.oferta;
-            descuento.value = p.descuento;
-
-            // Asignar los dropdowns
-            drop1Name.value = p.dropdown1_placeholder || 'Selecciona el tamaño';
-            drop2Name.value = p.dropdown2_placeholder || 'Selecciona el tipo';
-
-            // Cargar opciones de variantes
-            if (p.variantes) {
-                const variantes = JSON.parse(p.variantes);
-                variantes.drop1.forEach(v => {
-                    addDropOpt(1);
-                    const lastOpt = drop1Options.lastElementChild;
-                    lastOpt.querySelector(".oLabel").value = v.label;
-                    lastOpt.querySelector(".oImg").value = v.img || '';
-                    lastOpt.querySelector(".oPU").value = v.precio_unidad;
-                    lastOpt.querySelector(".oPB").value = v.precio_bulto;
-                    lastOpt.querySelector(".oBC").value = v.bulto_cant;
-                });
-
-                variantes.drop2.forEach(v => {
-                    addDropOpt(2);
-                    const lastOpt = drop2Options.lastElementChild;
-                    lastOpt.querySelector(".oLabel").value = v.label;
-                    lastOpt.querySelector(".oMeta").value = v.meta || '';
-                });
-            }
-
-            window.scrollTo(0, 0);
-        }
-
-        /* ======================================================
-           ELIMINAR
-        ===================================================== */
-        async function eliminar(id) {
-            if (!confirm("¿Eliminar?")) return;
-
-            const { error } = await sb.from("productos").delete().eq("id", id);
-
-            if (error) return alert(error.message);
-
-            cargar();
-        }
-
-        /* ======================================================
-           INIT
-        ===================================================== */
-        check();
-    </script>
-
-</body>
+            window.addEventListener("DOMContentLoaded", () => {
+                activarNumericosBase();
+                wireMainUpload();
+                resetForm();
+                check();
+            });
+        </script>
+    </body>
 
 </html>
