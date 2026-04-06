@@ -629,17 +629,18 @@
                 }
             }
 
-            async function cargar() {
-                const { data, error } = await sb
-                    .from("productos")
-                    .select("*")
-                    .order("created_at", { ascending: false });
+    async function cargar() {
+        const { data, error } = await sb
+            .from("productos")
+            .select("*")
+            .order("orden", { ascending: true })      // ✅ respeta el orden que definís
+            .order("created_at", { ascending: false });// desempate
 
-                if (error) return alert(error.message);
+        if (error) return alert(error.message);
 
-                cache = data || [];
-                renderLista(cache);
-            }
+        cache = data || [];
+        renderLista(cache);
+ }
 
             function renderLista(arr) {
                 $("lista").innerHTML = "";
