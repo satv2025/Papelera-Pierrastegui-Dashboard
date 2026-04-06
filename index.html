@@ -576,7 +576,7 @@
 
                     const payload = {
                         nombre: nombreVal,
-                        slug: $("slug").value.trim() || slugify(nombreVal),
+                        slug: slugify(nombreVal),
                         descripcion: $("descripcion").value,
                         categoria: $("categoria").value,
                         imagen: imgUrl,
