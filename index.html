@@ -19,21 +19,22 @@
             <div class="login-card">
                 <h2>Panel Admin</h2>
                 <div class="muted">Ingresá con un usuario autorizado.</div>
+        
                 <div class="customField">
-                    <label>Usuario</label>
-                    <div id="usernameField" class="customInput is-empty" contenteditable="true" data-placeholder="Usuario autorizado">
-                    </div>
+                    <label for="username">Nombre de usuario</label>
+                    <input id="username" type="text" class="loginInput" placeholder="usuario" autocomplete="username">
                 </div>
-                
+        
                 <div class="customField">
-                    <label>Contraseña</label>
+                    <label for="password">Contraseña</label>
                     <div class="passwordRow">
-                        <div id="passwordField" class="customInput is-empty" contenteditable="true" data-placeholder="Contraseña"></div>
-                        <button type="button" id="togglePassBtn">Mostrar</button>
+                        <input id="password" type="password" class="loginInput" placeholder="Contraseña"
+                            autocomplete="current-password">
+                        <button type="button" id="togglePassBtn" class="btn-ghost">Mostrar</button>
                     </div>
                 </div>
-                
-                <button style="width:100%" onclick="login()">Entrar</button>
+        
+                <button id="loginBtn" style="width:100%" type="button">Entrar</button>
             </div>
         </div>
 
@@ -168,7 +169,6 @@
         </div>
 
         <script>
-
             let editId = null;
             let cache = [];
 
@@ -188,19 +188,73 @@
                     .replace(/^-|-$/g, "");
             }
 
+            function escapeHtml(str) {
+                return String(str || "")
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+
             /* ============================
                LOGIN
             ============================ */
 
+            async function resolveLoginEmail(username) {
+                const map = {
+                    admin: "ppadmin@papelerapierrastegui.com.ar",
+                    panel: "ppadmin@papelerapierrastegui.com.ar"
+                };
+
+                const normalized = String(username || "").trim().toLowerCase();
+
+                if (map[normalized]) return map[normalized];
+
+                return normalized;
+            }
+
             async function login() {
-                const { error } = await sb.auth.signIn({
-                    email: $("email").value,
-                    password: $("password").value
-                });
+                const username = $("username")?.value.trim() || "";
+                const password = $("password")?.value || "";
+                const loginBtn = $("loginBtn");
 
-                if (error) return alert(error.message);
+                if (!username) {
+                    alert("Ingresá el usuario");
+                    $("username")?.focus();
+                    return;
+                }
 
-                check();
+                if (!password) {
+                    alert("Ingresá la contraseña");
+                    $("password")?.focus();
+                    return;
+                }
+
+                try {
+                    if (loginBtn) {
+                        loginBtn.disabled = true;
+                        loginBtn.textContent = "Ingresando...";
+                    }
+
+                    const email = await resolveLoginEmail(username);
+
+                    const { error } = await sb.auth.signIn({
+                        email,
+                        password
+                    });
+
+                    if (error) throw error;
+
+                    check();
+                } catch (error) {
+                    alert(error.message || "No se pudo iniciar sesión");
+                } finally {
+                    if (loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = "Entrar";
+                    }
+                }
             }
 
             async function logout() {
@@ -210,9 +264,12 @@
 
             function check() {
                 if (sb.auth.session()) {
-                    $("loginBox").classList.add("hidden");
-                    $("panel").classList.remove("hidden");
+                    $("loginBox")?.classList.add("hidden");
+                    $("panel")?.classList.remove("hidden");
                     cargar();
+                } else {
+                    $("loginBox")?.classList.remove("hidden");
+                    $("panel")?.classList.add("hidden");
                 }
             }
 
@@ -221,7 +278,6 @@
             ============================ */
 
             async function cargar() {
-
                 const { data, error } = await sb
                     .from("productos")
                     .select("*")
@@ -234,7 +290,30 @@
                 }
 
                 cache = data || [];
-                renderLista(cache);
+                aplicarFiltro();
+            }
+
+            /* ============================
+               BUSCADOR
+            ============================ */
+
+            function aplicarFiltro() {
+                const q = ($("search")?.value || "").trim().toLowerCase();
+
+                if (!q) {
+                    renderLista(cache);
+                    return;
+                }
+
+                const filtrados = cache.filter((p) => {
+                    const nombre = String(p.nombre || "").toLowerCase();
+                    const categoria = String(p.categoria || "").toLowerCase();
+                    const descripcion = String(p.descripcion || "").toLowerCase();
+
+                    return nombre.includes(q) || categoria.includes(q) || descripcion.includes(q);
+                });
+
+                renderLista(filtrados);
             }
 
             /* ============================
@@ -242,11 +321,21 @@
             ============================ */
 
             function renderLista(arr) {
+                const lista = $("lista");
+                if (!lista) return;
 
-                $("lista").innerHTML = "";
+                lista.innerHTML = "";
 
-                arr.forEach(p => {
+                if (!arr.length) {
+                    lista.innerHTML = `
+                                <div class="muted" style="margin-top:8px">
+                                    No se encontraron productos.
+                                </div>
+                            `;
+                    return;
+                }
 
+                arr.forEach((p) => {
                     const sinStock = p.sin_stock || Number(p.stock || 0) === 0;
 
                     const div = document.createElement("div");
@@ -254,41 +343,38 @@
                     if (!p.activo) div.style.opacity = "0.5";
 
                     div.innerHTML = `
-                                <img src="${p.imagen || ""}" alt="${p.nombre || ""}">
+                                <img src="${escapeHtml(p.imagen || "")}" alt="${escapeHtml(p.nombre || "")}">
                                 
                                 <div class="info">
-                                    <b>${p.nombre || ""}</b>
-                                    <small>${p.categoria || ""}</small>
-                    
+                                    <b>${escapeHtml(p.nombre || "")}</b>
+                                    <small>${escapeHtml(p.categoria || "")}</small>
+                
                                     <div class="badges">
                                         ${p.nuevo ? `<span class="badge badge-ok">NUEVO</span>` : ""}
                                         ${sinStock ? `<span class="badge badge-danger">SIN STOCK</span>` : ""}
                                         ${(p.oferta && Number(p.descuento || 0) > 0)
-                            ? `<span class="badge badge-offer">-${p.descuento}%</span>`
+                            ? `<span class="badge badge-offer">-${escapeHtml(p.descuento)}%</span>`
                             : ""}
-                                        ${!p.activo ? `<span class="badge badge-inactive">OCULTO</span>` : ""}
+                                        ${!p.activo ? `<span class="badge badge-soft">OCULTO</span>` : ""}
                                     </div>
                                 </div>
-                    
+                
                                 <div class="actions">
-                                    <button class="mini btn-ghost"
-                                        onclick="toggleActivo('${p.id}', ${p.activo})">
+                                    <button class="mini btn-ghost" onclick="toggleActivo('${p.id}', ${p.activo})">
                                         ${p.activo ? "Ocultar" : "Mostrar"}
                                     </button>
-                    
-                                    <button class="mini btn-ghost"
-                                        onclick="editar('${p.id}')">
+                
+                                    <button class="mini btn-ghost" onclick="editar('${p.id}')">
                                         Editar
                                     </button>
-                    
-                                    <button class="mini btn-danger"
-                                        onclick="eliminar('${p.id}')">
+                
+                                    <button class="mini btn-danger" onclick="eliminar('${p.id}')">
                                         Eliminar
                                     </button>
                                 </div>
                             `;
 
-                    $("lista").appendChild(div);
+                    lista.appendChild(div);
                 });
             }
 
@@ -297,7 +383,6 @@
             ============================ */
 
             async function toggleActivo(id, estadoActual) {
-
                 const { error } = await sb
                     .from("productos")
                     .update({ activo: !estadoActual })
@@ -316,14 +401,16 @@
             ============================ */
 
             async function guardar() {
-
                 try {
-
-                    const nombreVal = $("nombre").value.trim();
-                    if (!nombreVal) return alert("Poné nombre");
+                    const nombreVal = $("nombre")?.value.trim();
+                    if (!nombreVal) {
+                        alert("Poné nombre");
+                        $("nombre")?.focus();
+                        return;
+                    }
 
                     const existing = editId
-                        ? cache.find(x => x.id === editId)
+                        ? cache.find((x) => x.id === editId)
                         : null;
 
                     let imgUrl = existing?.imagen || null;
@@ -332,29 +419,29 @@
                         imgUrl = await upload($("imagenFile").files[0]);
                     }
 
-                    const stockVal = limpiarNumero($("stock").value);
-                    const descuentoVal = limpiarNumero($("descuento").value);
+                    const stockVal = limpiarNumero($("stock")?.value);
+                    const descuentoVal = limpiarNumero($("descuento")?.value);
 
                     const payload = {
                         nombre: nombreVal,
                         slug: slugify(nombreVal),
-                        descripcion: $("descripcion").value,
-                        categoria: $("categoria").value,
+                        descripcion: $("descripcion")?.value || "",
+                        categoria: $("categoria")?.value || "",
                         imagen: imgUrl,
 
-                        precio_unidad: limpiarNumero($("precioUnidad").value),
-                        precio_bulto: limpiarNumero($("precioBulto").value),
-                        bulto_cant: limpiarNumero($("bultoCant").value),
+                        precio_unidad: limpiarNumero($("precioUnidad")?.value),
+                        precio_bulto: limpiarNumero($("precioBulto")?.value),
+                        bulto_cant: limpiarNumero($("bultoCant")?.value),
 
                         activo: existing ? existing.activo : true,
 
-                        nuevo: $("nuevo").checked,
+                        nuevo: !!$("nuevo")?.checked,
 
                         stock: stockVal,
-                        sin_stock: stockVal === 0 ? true : $("sinStock").checked,
+                        sin_stock: stockVal === 0 ? true : !!$("sinStock")?.checked,
 
                         descuento: descuentoVal,
-                        oferta: descuentoVal > 0 ? true : $("oferta").checked
+                        oferta: descuentoVal > 0 ? true : !!$("oferta")?.checked
                     };
 
                     const res = editId
@@ -365,9 +452,8 @@
 
                     alert("Guardado correctamente");
 
-                    editId = null;
+                    limpiarFormulario();
                     await cargar();
-
                 } catch (e) {
                     alert(e.message || e);
                 }
@@ -378,8 +464,7 @@
             ============================ */
 
             function editar(id) {
-
-                const p = cache.find(x => x.id === id);
+                const p = cache.find((x) => x.id === id);
                 if (!p) return;
 
                 editId = p.id;
@@ -399,7 +484,71 @@
                 $("sinStock").checked = !!p.sin_stock;
                 $("oferta").checked = !!p.oferta;
 
+                const formTitle = $("formTitle");
+                const cancelBtn = $("cancelEdit");
+                const currentImageBox = $("currentImageBox");
+                const currentImagePreview = $("currentImagePreview");
+                const mainUploadText = $("mainUploadText");
+
+                if (formTitle) formTitle.textContent = "Editar producto";
+                if (cancelBtn) cancelBtn.classList.remove("hidden");
+
+                if (currentImageBox && currentImagePreview) {
+                    if (p.imagen) {
+                        currentImagePreview.src = p.imagen;
+                        currentImageBox.classList.remove("hidden");
+                    } else {
+                        currentImagePreview.removeAttribute("src");
+                        currentImageBox.classList.add("hidden");
+                    }
+                }
+
+                if ($("imagenFile")) $("imagenFile").value = "";
+
+                if (mainUploadText) {
+                    mainUploadText.textContent = p.imagen
+                        ? "Podés reemplazar la imagen actual"
+                        : "Hacé click o arrastrá una imagen acá";
+                }
+
                 window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function cancelarEdicion() {
+                limpiarFormulario();
+            }
+
+            function limpiarFormulario() {
+                editId = null;
+
+                $("nombre").value = "";
+                $("descripcion").value = "";
+                $("categoria").value = "";
+
+                $("precioUnidad").value = "";
+                $("precioBulto").value = "";
+                $("bultoCant").value = "";
+
+                $("stock").value = "";
+                $("descuento").value = "";
+
+                $("nuevo").checked = false;
+                $("sinStock").checked = false;
+                $("oferta").checked = false;
+
+                if ($("imagenFile")) $("imagenFile").value = "";
+
+                $("formTitle").textContent = "Nuevo producto";
+                $("cancelEdit")?.classList.add("hidden");
+                $("currentImageBox")?.classList.add("hidden");
+
+                const currentImagePreview = $("currentImagePreview");
+                if (currentImagePreview) currentImagePreview.removeAttribute("src");
+
+                const mainUploadText = $("mainUploadText");
+                if (mainUploadText) {
+                    mainUploadText.textContent = "Hacé click o arrastrá una imagen acá";
+                }
             }
 
             /* ============================
@@ -407,8 +556,7 @@
             ============================ */
 
             async function eliminar(id) {
-
-                const p = cache.find(x => x.id === id);
+                const p = cache.find((x) => x.id === id);
                 if (!p) return;
 
                 if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
@@ -423,6 +571,8 @@
                     return;
                 }
 
+                if (editId === id) limpiarFormulario();
+
                 await cargar();
             }
 
@@ -431,8 +581,11 @@
             ============================ */
 
             async function upload(file) {
+                const ext = file.name.includes(".")
+                    ? file.name.split(".").pop()
+                    : "jpg";
 
-                const name = crypto.randomUUID() + "." + file.name.split(".").pop();
+                const name = crypto.randomUUID() + "." + ext;
 
                 const { error } = await sb.storage
                     .from("productos")
@@ -448,15 +601,159 @@
             }
 
             /* ============================
+               LOGIN UI
+            ============================ */
+
+            function initPasswordToggle() {
+                const passwordInput = $("password");
+                const toggleBtn = $("togglePassBtn");
+
+                if (!passwordInput || !toggleBtn) return;
+
+                toggleBtn.addEventListener("click", () => {
+                    const isHidden = passwordInput.type === "password";
+                    passwordInput.type = isHidden ? "text" : "password";
+                    toggleBtn.textContent = isHidden ? "Ocultar" : "Mostrar";
+                });
+            }
+
+            function initLoginEnter() {
+                $("username")?.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        login();
+                    }
+                });
+
+                $("password")?.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        login();
+                    }
+                });
+
+                $("loginBtn")?.addEventListener("click", login);
+            }
+
+            /* ============================
+               UI UPLOAD PRINCIPAL
+            ============================ */
+
+            function initMainUpload() {
+                const fileInput = $("imagenFile");
+                const box = $("mainUploadBox");
+                const text = $("mainUploadText");
+
+                if (!fileInput || !box) return;
+
+                box.addEventListener("click", () => fileInput.click());
+
+                fileInput.addEventListener("change", () => {
+                    const file = fileInput.files?.[0];
+                    if (!file) return;
+                    if (text) text.textContent = file.name;
+                });
+
+                ["dragenter", "dragover"].forEach((evt) => {
+                    box.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        box.classList.add("dragover");
+                    });
+                });
+
+                ["dragleave", "dragend"].forEach((evt) => {
+                    box.addEventListener(evt, () => {
+                        box.classList.remove("dragover");
+                    });
+                });
+
+                box.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    box.classList.remove("dragover");
+
+                    const file = e.dataTransfer?.files?.[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith("image/")) {
+                        alert("Subí una imagen válida.");
+                        return;
+                    }
+
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+
+                    if (text) text.textContent = file.name;
+                });
+            }
+
+            /* ============================
+               DROPDOWNS
+            ============================ */
+
+            function toggleDrops() {
+                $("drop1Box")?.classList.toggle("hidden", !$("hasDrop1")?.checked);
+                $("drop2Box")?.classList.toggle("hidden", !$("hasDrop2")?.checked);
+            }
+
+            function addDropOpt(tipo) {
+                const container = tipo === 1 ? $("drop1Options") : $("drop2Options");
+                if (!container) return;
+
+                const wrap = document.createElement("div");
+                wrap.className = "optWrap";
+
+                wrap.innerHTML = `
+                            <div class="opt">
+                                <input type="text" placeholder="Nombre de la opción">
+                                <button type="button" class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+                            </div>
+                        `;
+
+                container.appendChild(wrap);
+            }
+
+            function clearDrop2Options() {
+                const container = $("drop2Options");
+                if (container) container.innerHTML = "";
+            }
+
+            function setDefaultDrop2Options() {
+                const container = $("drop2Options");
+                if (!container) return;
+
+                container.innerHTML = "";
+
+                ["Por Unidad", "Por Bulto"].forEach((label) => {
+                    const wrap = document.createElement("div");
+                    wrap.className = "optWrap";
+                    wrap.innerHTML = `
+                                <div class="opt">
+                                    <input type="text" placeholder="Nombre de la opción" value="${label}">
+                                    <button type="button" class="rm" onclick="this.closest('.optWrap').remove()">✕</button>
+                                </div>
+                            `;
+                    container.appendChild(wrap);
+                });
+            }
+
+            /* ============================
                INIT
             ============================ */
 
             window.addEventListener("DOMContentLoaded", () => {
                 check();
-            });
+                initPasswordToggle();
+                initLoginEnter();
+                initMainUpload();
 
-           </script>
-           
+                $("search")?.addEventListener("input", aplicarFiltro);
+
+                toggleDrops();
+            });
+        </script>
     </body>
 
 </html>
