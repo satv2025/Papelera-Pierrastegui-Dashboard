@@ -19,8 +19,20 @@
             <div class="login-card">
                 <h2>Panel Admin</h2>
                 <div class="muted">Ingresá con un usuario autorizado.</div>
-                <input id="email" placeholder="Email">
-                <input id="password" type="password" placeholder="Password">
+                <div class="customField">
+                    <label>Usuario</label>
+                    <div id="usernameField" class="customInput is-empty" contenteditable="true" data-placeholder="Usuario autorizado">
+                    </div>
+                </div>
+                
+                <div class="customField">
+                    <label>Contraseña</label>
+                    <div class="passwordRow">
+                        <div id="passwordField" class="customInput is-empty" contenteditable="true" data-placeholder="Contraseña"></div>
+                        <button type="button" id="togglePassBtn">Mostrar</button>
+                    </div>
+                </div>
+                
                 <button style="width:100%" onclick="login()">Entrar</button>
             </div>
         </div>
@@ -156,38 +168,14 @@
         </div>
 
         <script>
+
             let editId = null;
             let cache = [];
 
             const $ = (id) => document.getElementById(id);
 
-            function formatearMiles(valor) {
-                if (valor === null || valor === undefined || valor === "") return "";
-                const num = String(valor).replace(/\D/g, "");
-                if (!num) return "";
-                return Number(num).toLocaleString("es-AR");
-            }
-
             function limpiarNumero(valor) {
                 return Number(String(valor || "").replace(/\D/g, "")) || 0;
-            }
-
-            function activarInputNumerico(input) {
-                if (!input) return;
-                input.type = "text";
-                input.addEventListener("input", e => {
-                    e.target.value = formatearMiles(e.target.value);
-                });
-            }
-
-            function activarNumericosBase() {
-                [
-                    $("precioUnidad"),
-                    $("precioBulto"),
-                    $("bultoCant"),
-                    $("descuento"),
-                    $("stock")
-                ].forEach(activarInputNumerico);
             }
 
             function slugify(str) {
@@ -200,340 +188,9 @@
                     .replace(/^-|-$/g, "");
             }
 
-            function parseVariantes(raw) {
-                if (!raw) return { drop1: [], drop2: [] };
-
-                if (typeof raw === "string") {
-                    try {
-                        return JSON.parse(raw);
-                    } catch {
-                        return { drop1: [], drop2: [] };
-                    }
-                }
-
-                return raw;
-            }
-
-            function toggleDrops() {
-                $("drop1Box").classList.toggle("hidden", !$("hasDrop1").checked);
-                $("drop2Box").classList.toggle("hidden", !$("hasDrop2").checked);
-
-                if ($("hasDrop2").checked) {
-                    if (!$("drop2Name").value.trim()) {
-                        $("drop2Name").value = "Seleccioná el tipo";
-                    }
-
-                    if (!$("drop2Options").children.length) {
-                        setDefaultDrop2Options();
-                    }
-                }
-            }
-
-            function resetForm() {
-                editId = null;
-                $("formTitle").innerText = "Nuevo producto";
-
-                document.querySelectorAll("input, textarea").forEach(i => {
-                    if (i.type !== "checkbox" && i.type !== "file" && i.type !== "hidden") i.value = "";
-                });
-
-                $("imagenFile").value = "";
-
-                $("mainUploadText").textContent = "Hacé click o arrastrá una imagen acá";
-
-                $("hasDrop1").checked = false;
-                $("hasDrop2").checked = false;
-                $("nuevo").checked = false;
-                $("sinStock").checked = false;
-                $("oferta").checked = false;
-
-                $("drop1Name").value = "";
-                $("drop2Name").value = "";
-
-                $("drop1Options").innerHTML = "";
-                $("drop2Options").innerHTML = "";
-
-                $("currentImagePreview").src = "";
-                $("currentImageBox").classList.add("hidden");
-
-                $("cancelEdit").classList.add("hidden");
-
-                toggleDrops();
-            }
-
-            function cancelarEdicion() {
-                resetForm();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-
-            function optTemplateDrop1(item = {}) {
-                const hasImg = !!item.img;
-
-                return `
-                <div class="opt opt-model-top">
-                    <input class="oLabel" placeholder="Modelo / Variante" value="${item.label || ""}">
-                    <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
-                </div>
-
-                <div class="variantUploadBox">
-                    <input class="oImgFile" type="file" accept="image/*" hidden>
-                    <input class="oImg" type="hidden" value="${item.img || ""}">
-
-                    <div class="variantUploadInner">
-                        <div class="variantUploadLeft">
-                            <div class="uploadMiniIcon">📸</div>
-                            <div class="variantUploadMeta">
-                                <strong>Imagen de la variante</strong>
-                                <span class="variantUploadText">${hasImg ? "Imagen cargada" : "Subí o arrastrá una imagen"}</span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-ghost variantPickBtn">Elegir imagen</button>
-                    </div>
-
-                    <div class="variantPreviewWrap ${hasImg ? "" : "hidden"}">
-                        <img class="variantPreview" src="${item.img || ""}" alt="Preview variante">
-                    </div>
-                </div>
-
-                <div class="optPrices">
-                    <input class="oPU" placeholder="Precio Unidad" value="${formatearMiles(item.precio_unidad || 0)}">
-                    <input class="oPB" placeholder="Precio Bulto" value="${formatearMiles(item.precio_bulto || 0)}">
-                    <input class="oBC" placeholder="Bulto Cant" value="${formatearMiles(item.bulto_cant || 0)}">
-                </div>
-            `;
-            }
-
-            function optTemplateDrop2(label = "", meta = "") {
-                return `
-                <div class="opt opt-type">
-                    <input class="oLabel" placeholder="Opción" value="${label}">
-                    <input class="oMeta" placeholder="Meta (unidad / bulto)" value="${meta}">
-                    <button class="rm" type="button" onclick="this.closest('.optWrap').remove()">✕</button>
-                </div>
-            `;
-            }
-
-            function wireDrop1Numerics(wrap) {
-                activarInputNumerico(wrap.querySelector(".oPU"));
-                activarInputNumerico(wrap.querySelector(".oPB"));
-                activarInputNumerico(wrap.querySelector(".oBC"));
-            }
-
-            function wireMainUpload() {
-                const fileInput = $("imagenFile");
-                const box = $("mainUploadBox");
-                const text = $("mainUploadText");
-
-                if (!fileInput || !box || !text) return;
-
-                box.addEventListener("click", () => fileInput.click());
-
-                fileInput.addEventListener("change", () => {
-                    const file = fileInput.files?.[0];
-                    text.textContent = file ? file.name : "Hacé click o arrastrá una imagen acá";
-                });
-
-                box.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    box.classList.add("dragover");
-                });
-
-                box.addEventListener("dragleave", () => {
-                    box.classList.remove("dragover");
-                });
-
-                box.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    box.classList.remove("dragover");
-
-                    const file = e.dataTransfer?.files?.[0];
-                    if (!file) return;
-
-                    const dt = new DataTransfer();
-                    dt.items.add(file);
-                    fileInput.files = dt.files;
-                    text.textContent = file.name;
-                });
-            }
-
-            function wireDrop1ImageUpload(wrap) {
-                const fileInput = wrap.querySelector(".oImgFile");
-                const hiddenUrl = wrap.querySelector(".oImg");
-                const pickBtn = wrap.querySelector(".variantPickBtn");
-                const uploadText = wrap.querySelector(".variantUploadText");
-                const uploadBox = wrap.querySelector(".variantUploadBox");
-                const previewWrap = wrap.querySelector(".variantPreviewWrap");
-                const preview = wrap.querySelector(".variantPreview");
-
-                if (!fileInput || !hiddenUrl || !pickBtn || !uploadText || !uploadBox || !previewWrap || !preview) return;
-
-                pickBtn.addEventListener("click", () => {
-                    fileInput.click();
-                });
-
-                fileInput.addEventListener("change", async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    try {
-                        uploadText.textContent = "Subiendo imagen...";
-                        pickBtn.disabled = true;
-
-                        const url = await upload(file);
-
-                        hiddenUrl.value = url;
-                        preview.src = url;
-                        previewWrap.classList.remove("hidden");
-                        uploadText.textContent = "Imagen cargada";
-                    } catch (err) {
-                        alert("Error al subir imagen de variante: " + (err.message || err));
-                        uploadText.textContent = "Error al subir";
-                    } finally {
-                        pickBtn.disabled = false;
-                    }
-                });
-
-                uploadBox.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    uploadBox.classList.add("dragover");
-                });
-
-                uploadBox.addEventListener("dragleave", () => {
-                    uploadBox.classList.remove("dragover");
-                });
-
-                uploadBox.addEventListener("drop", async (e) => {
-                    e.preventDefault();
-                    uploadBox.classList.remove("dragover");
-
-                    const file = e.dataTransfer?.files?.[0];
-                    if (!file) return;
-
-                    try {
-                        uploadText.textContent = "Subiendo imagen...";
-                        pickBtn.disabled = true;
-
-                        const url = await upload(file);
-
-                        hiddenUrl.value = url;
-                        preview.src = url;
-                        previewWrap.classList.remove("hidden");
-                        uploadText.textContent = "Imagen cargada";
-                    } catch (err) {
-                        alert("Error al subir imagen de variante: " + (err.message || err));
-                        uploadText.textContent = "Error al subir";
-                    } finally {
-                        pickBtn.disabled = false;
-                    }
-                });
-            }
-
-            function addDropOpt(which) {
-                const wrap = document.createElement("div");
-                wrap.className = "optWrap";
-
-                if (which === 1) {
-                    wrap.innerHTML = optTemplateDrop1();
-                    $("drop1Options").appendChild(wrap);
-                    wireDrop1Numerics(wrap);
-                    wireDrop1ImageUpload(wrap);
-                    return;
-                }
-
-                wrap.innerHTML = optTemplateDrop2();
-                $("drop2Options").appendChild(wrap);
-            }
-
-            function setDefaultDrop2Options() {
-                $("drop2Options").innerHTML = "";
-
-                const unidad = document.createElement("div");
-                unidad.className = "optWrap";
-                unidad.innerHTML = optTemplateDrop2("Por Unidad", "unidad");
-
-                const bulto = document.createElement("div");
-                bulto.className = "optWrap";
-                bulto.innerHTML = optTemplateDrop2("Por Bulto", "bulto");
-
-                $("drop2Options").appendChild(unidad);
-                $("drop2Options").appendChild(bulto);
-            }
-
-            function clearDrop2Options() {
-                $("drop2Options").innerHTML = "";
-            }
-
-            function readDrop1Options() {
-                return [...$("drop1Options").querySelectorAll(".optWrap")]
-                    .map(w => ({
-                        label: (w.querySelector(".oLabel").value || "").trim(),
-                        img: (w.querySelector(".oImg").value || "").trim() || null,
-                        precio_unidad: limpiarNumero(w.querySelector(".oPU").value),
-                        precio_bulto: limpiarNumero(w.querySelector(".oPB").value),
-                        bulto_cant: limpiarNumero(w.querySelector(".oBC").value)
-                    }))
-                    .filter(x => x.label);
-            }
-
-            function readDrop2Options() {
-                return [...$("drop2Options").querySelectorAll(".optWrap")]
-                    .map(w => {
-                        const label = (w.querySelector(".oLabel").value || "").trim();
-                        let meta = (w.querySelector(".oMeta").value || "").trim().toLowerCase();
-
-                        if (!label) return null;
-
-                        if (!meta) {
-                            if (label.toLowerCase().includes("bulto")) meta = "bulto";
-                            else meta = "unidad";
-                        }
-
-                        if (meta !== "unidad" && meta !== "bulto") {
-                            if (label.toLowerCase().includes("bulto")) meta = "bulto";
-                            else meta = "unidad";
-                        }
-
-                        return { label, meta };
-                    })
-                    .filter(Boolean);
-            }
-
-            function loadDrop1Options(items = []) {
-                $("drop1Options").innerHTML = "";
-
-                items.forEach(item => {
-                    const wrap = document.createElement("div");
-                    wrap.className = "optWrap";
-                    wrap.innerHTML = optTemplateDrop1(item);
-                    $("drop1Options").appendChild(wrap);
-                    wireDrop1Numerics(wrap);
-                    wireDrop1ImageUpload(wrap);
-                });
-            }
-
-            function loadDrop2Options(items = []) {
-                $("drop2Options").innerHTML = "";
-
-                items.forEach(item => {
-                    const wrap = document.createElement("div");
-                    wrap.className = "optWrap";
-                    wrap.innerHTML = optTemplateDrop2(item.label || "", item.meta || "");
-                    $("drop2Options").appendChild(wrap);
-                });
-            }
-
-            async function upload(file) {
-                const name = crypto.randomUUID() + "." + file.name.split(".").pop();
-
-                const { error } = await sb.storage
-                    .from("productos")
-                    .upload(name, file, { upsert: true });
-
-                if (error) throw error;
-
-                const { publicURL } = sb.storage.from("productos").getPublicUrl(name);
-                return publicURL;
-            }
+            /* ============================
+               LOGIN
+            ============================ */
 
             async function login() {
                 const { error } = await sb.auth.signIn({
@@ -559,20 +216,124 @@
                 }
             }
 
+            /* ============================
+               CARGAR PRODUCTOS
+            ============================ */
+
+            async function cargar() {
+
+                const { data, error } = await sb
+                    .from("productos")
+                    .select("*")
+                    .order("orden", { ascending: true })
+                    .order("created_at", { ascending: false });
+
+                if (error) {
+                    alert(error.message);
+                    return;
+                }
+
+                cache = data || [];
+                renderLista(cache);
+            }
+
+            /* ============================
+               RENDER LISTA
+            ============================ */
+
+            function renderLista(arr) {
+
+                $("lista").innerHTML = "";
+
+                arr.forEach(p => {
+
+                    const sinStock = p.sin_stock || Number(p.stock || 0) === 0;
+
+                    const div = document.createElement("div");
+                    div.className = "product-row";
+                    if (!p.activo) div.style.opacity = "0.5";
+
+                    div.innerHTML = `
+                                <img src="${p.imagen || ""}" alt="${p.nombre || ""}">
+                                
+                                <div class="info">
+                                    <b>${p.nombre || ""}</b>
+                                    <small>${p.categoria || ""}</small>
+                    
+                                    <div class="badges">
+                                        ${p.nuevo ? `<span class="badge badge-ok">NUEVO</span>` : ""}
+                                        ${sinStock ? `<span class="badge badge-danger">SIN STOCK</span>` : ""}
+                                        ${(p.oferta && Number(p.descuento || 0) > 0)
+                            ? `<span class="badge badge-offer">-${p.descuento}%</span>`
+                            : ""}
+                                        ${!p.activo ? `<span class="badge badge-inactive">OCULTO</span>` : ""}
+                                    </div>
+                                </div>
+                    
+                                <div class="actions">
+                                    <button class="mini btn-ghost"
+                                        onclick="toggleActivo('${p.id}', ${p.activo})">
+                                        ${p.activo ? "Ocultar" : "Mostrar"}
+                                    </button>
+                    
+                                    <button class="mini btn-ghost"
+                                        onclick="editar('${p.id}')">
+                                        Editar
+                                    </button>
+                    
+                                    <button class="mini btn-danger"
+                                        onclick="eliminar('${p.id}')">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            `;
+
+                    $("lista").appendChild(div);
+                });
+            }
+
+            /* ============================
+               TOGGLE ACTIVO
+            ============================ */
+
+            async function toggleActivo(id, estadoActual) {
+
+                const { error } = await sb
+                    .from("productos")
+                    .update({ activo: !estadoActual })
+                    .eq("id", id);
+
+                if (error) {
+                    alert(error.message);
+                    return;
+                }
+
+                await cargar();
+            }
+
+            /* ============================
+               GUARDAR
+            ============================ */
+
             async function guardar() {
+
                 try {
+
                     const nombreVal = $("nombre").value.trim();
                     if (!nombreVal) return alert("Poné nombre");
 
                     const existing = editId
-                        ? (cache.find(x => x.id === editId) || null)
+                        ? cache.find(x => x.id === editId)
                         : null;
 
                     let imgUrl = existing?.imagen || null;
 
-                    if ($("imagenFile").files[0]) {
+                    if ($("imagenFile")?.files?.[0]) {
                         imgUrl = await upload($("imagenFile").files[0]);
                     }
+
+                    const stockVal = limpiarNumero($("stock").value);
+                    const descuentoVal = limpiarNumero($("descuento").value);
 
                     const payload = {
                         nombre: nombreVal,
@@ -585,34 +346,16 @@
                         precio_bulto: limpiarNumero($("precioBulto").value),
                         bulto_cant: limpiarNumero($("bultoCant").value),
 
-                        activo: true,
+                        activo: existing ? existing.activo : true,
+
                         nuevo: $("nuevo").checked,
-                        sin_stock: $("sinStock").checked,
-                        stock: limpiarNumero($("stock").value),
 
-                        oferta: $("oferta").checked,
-                        descuento: limpiarNumero($("descuento").value),
+                        stock: stockVal,
+                        sin_stock: stockVal === 0 ? true : $("sinStock").checked,
 
-                        dropdown1_placeholder: $("hasDrop1").checked
-                            ? ($("drop1Name").value.trim() || "Seleccioná una opción")
-                            : null,
-
-                        dropdown2_placeholder: $("hasDrop2").checked
-                            ? ($("drop2Name").value.trim() || "Seleccioná el tipo")
-                            : null,
-
-                        variantes: {
-                            drop1: $("hasDrop1").checked ? readDrop1Options() : [],
-                            drop2: $("hasDrop2").checked ? readDrop2Options() : []
-                        }
+                        descuento: descuentoVal,
+                        oferta: descuentoVal > 0 ? true : $("oferta").checked
                     };
-
-                    if ($("hasDrop2").checked && payload.variantes.drop2.length === 0) {
-                        payload.variantes.drop2 = [
-                            { label: "Por Unidad", meta: "unidad" },
-                            { label: "Por Bulto", meta: "bulto" }
-                        ];
-                    }
 
                     const res = editId
                         ? await sb.from("productos").update(payload).eq("id", editId)
@@ -620,168 +363,100 @@
 
                     if (res.error) throw res.error;
 
-                    await cargar();
-                    resetForm();
+                    alert("Guardado correctamente");
 
-                    alert("✅ Guardado");
+                    editId = null;
+                    await cargar();
+
                 } catch (e) {
                     alert(e.message || e);
                 }
             }
 
-    async function cargar() {
-        const { data, error } = await sb
-            .from("productos")
-            .select("*")
-            .order("orden", { ascending: true })      // ✅ respeta el orden que definís
-            .order("created_at", { ascending: false });// desempate
-
-        if (error) return alert(error.message);
-
-        cache = data || [];
-        renderLista(cache);
- }
-
-            function renderLista(arr) {
-                $("lista").innerHTML = "";
-
-                arr.forEach(p => {
-                    const variantes = parseVariantes(p.variantes);
-                    const tieneModelos = Array.isArray(variantes.drop1) && variantes.drop1.length > 0;
-                    const tieneTipos = Array.isArray(variantes.drop2) && variantes.drop2.length > 0;
-
-                    const precioFinal = p.oferta
-                        ? Math.round((p.precio_unidad || 0) * (1 - (p.descuento || 0) / 100))
-                        : (p.precio_unidad || 0);
-
-                    const div = document.createElement("div");
-                    div.className = "product-row";
-
-                    div.innerHTML = `
-                    <img src="${p.imagen || ""}" alt="${p.nombre || ""}">
-                    <div class="info">
-                        <b>${p.nombre || ""}</b>
-                        <small>${p.categoria || ""}</small>
-
-                        <div class="meta">
-                            ${p.oferta
-                            ? `<s>$${Number(p.precio_unidad || 0).toLocaleString("es-AR")}</s>
-                                   <b class="price-offer">$${Number(precioFinal).toLocaleString("es-AR")} (-${p.descuento || 0}%)</b>`
-                            : `$${Number(precioFinal).toLocaleString("es-AR")}`
-                        }
-                        </div>
-
-                        <div class="badges">
-                            ${p.nuevo ? `<span class="badge badge-ok">NUEVO</span>` : ""}
-                            ${(p.sin_stock || Number(p.stock || 0) === 0) ? `<span class="badge badge-danger">SIN STOCK</span>` : ""}
-                            ${tieneModelos ? `<span class="badge badge-soft">MODELOS</span>` : ""}
-                            ${tieneTipos ? `<span class="badge badge-soft">TIPOS</span>` : ""}
-                        </div>
-                    </div>
-                    <div class="actions">
-                        <button class="mini btn-ghost" onclick="editar('${p.id}')">Editar</button>
-                        <button class="mini btn-danger" onclick="eliminar('${p.id}')">Eliminar</button>
-                    </div>
-                `;
-
-                    $("lista").appendChild(div);
-                });
-            }
-
-            $("search").oninput = () => {
-                const q = $("search").value.toLowerCase();
-
-                renderLista(cache.filter(p =>
-                    (p.nombre || "").toLowerCase().includes(q) ||
-                    (p.categoria || "").toLowerCase().includes(q)
-                ));
-            };
+            /* ============================
+               EDITAR
+            ============================ */
 
             function editar(id) {
+
                 const p = cache.find(x => x.id === id);
-                if (!p) return alert("No se pudo abrir el producto");
+                if (!p) return;
 
                 editId = p.id;
-                $("formTitle").innerText = "Editar producto";
-                $("cancelEdit").classList.remove("hidden");
 
                 $("nombre").value = p.nombre || "";
                 $("descripcion").value = p.descripcion || "";
                 $("categoria").value = p.categoria || "";
-                $("slug").value = p.slug || "";
 
-                $("precioUnidad").value = formatearMiles(p.precio_unidad || 0);
-                $("precioBulto").value = formatearMiles(p.precio_bulto || 0);
-                $("bultoCant").value = formatearMiles(p.bulto_cant || 0);
+                $("precioUnidad").value = p.precio_unidad || "";
+                $("precioBulto").value = p.precio_bulto || "";
+                $("bultoCant").value = p.bulto_cant || "";
 
-                $("stock").value = formatearMiles(p.stock || 0);
-                $("descuento").value = formatearMiles(p.descuento || 0);
+                $("stock").value = p.stock || "";
+                $("descuento").value = p.descuento || "";
 
                 $("nuevo").checked = !!p.nuevo;
                 $("sinStock").checked = !!p.sin_stock;
                 $("oferta").checked = !!p.oferta;
 
-                $("imagenFile").value = "";
-                $("mainUploadText").textContent = "Hacé click o arrastrá una imagen acá";
-
-                if (p.imagen) {
-                    $("currentImagePreview").src = p.imagen;
-                    $("currentImageBox").classList.remove("hidden");
-                } else {
-                    $("currentImagePreview").src = "";
-                    $("currentImageBox").classList.add("hidden");
-                }
-
-                const variantes = parseVariantes(p.variantes);
-                const drop1 = Array.isArray(variantes.drop1) ? variantes.drop1 : [];
-                const drop2 = Array.isArray(variantes.drop2) ? variantes.drop2 : [];
-
-                $("hasDrop1").checked = drop1.length > 0;
-                $("hasDrop2").checked = drop2.length > 0;
-
-                $("drop1Name").value = p.dropdown1_placeholder || "";
-                $("drop2Name").value = p.dropdown2_placeholder || "";
-
-                toggleDrops();
-
-                loadDrop1Options(drop1);
-
-                if ($("hasDrop2").checked) {
-                    loadDrop2Options(drop2.length ? drop2 : [
-                        { label: "Por Unidad", meta: "unidad" },
-                        { label: "Por Bulto", meta: "bulto" }
-                    ]);
-                } else {
-                    $("drop2Options").innerHTML = "";
-                }
-
                 window.scrollTo({ top: 0, behavior: "smooth" });
             }
 
+            /* ============================
+               ELIMINAR
+            ============================ */
+
             async function eliminar(id) {
+
                 const p = cache.find(x => x.id === id);
                 if (!p) return;
 
-                const ok = confirm(`¿Eliminar "${p.nombre}"?`);
-                if (!ok) return;
+                if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
 
-                const { error } = await sb.from("productos").delete().eq("id", id);
-                if (error) return alert(error.message);
+                const { error } = await sb
+                    .from("productos")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) {
+                    alert(error.message);
+                    return;
+                }
 
                 await cargar();
             }
 
-            $("stock").addEventListener("input", e => {
-                $("sinStock").checked = limpiarNumero(e.target.value) === 0;
-            });
+            /* ============================
+               UPLOAD STORAGE
+            ============================ */
+
+            async function upload(file) {
+
+                const name = crypto.randomUUID() + "." + file.name.split(".").pop();
+
+                const { error } = await sb.storage
+                    .from("productos")
+                    .upload(name, file, { upsert: true });
+
+                if (error) throw error;
+
+                const { publicURL } = sb.storage
+                    .from("productos")
+                    .getPublicUrl(name);
+
+                return publicURL;
+            }
+
+            /* ============================
+               INIT
+            ============================ */
 
             window.addEventListener("DOMContentLoaded", () => {
-                activarNumericosBase();
-                wireMainUpload();
-                resetForm();
                 check();
             });
-        </script>
+
+           </script>
+           
     </body>
 
 </html>

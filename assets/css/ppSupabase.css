@@ -560,3 +560,30 @@ a {
         align-items: flex-start;
     }
 }
+
+.customInput {
+    min-height: 44px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    outline: none;
+    font-weight: 700;
+}
+
+.customInput.is-empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.passwordRow {
+    display: flex;
+    gap: 8px;
+}
+
+.customField label {
+    font-weight: 800;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
+}
